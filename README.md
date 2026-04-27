@@ -1,56 +1,149 @@
-# ParkEase – Smart Cost-Effective Parking Booking System
+# 🚗 ParkEase – Smart Cost-Effective Parking Booking System
 
-Welcome to **ParkEase**! This is a movie-ticket-style parking booking platform where users can easily find nearby registered parking areas and book parking slots in advance.
+Welcome to **ParkEase**! This is a comprehensive, movie-ticket-style parking booking platform where users can easily find nearby registered parking areas and book parking slots in advance.
 
-The goal of this system is to solve the problem of people wasting time searching for parking spaces, which causes traffic congestion and frustration. Instead of depending on expensive IoT sensors, this system works with affiliated parking owners where all parking data is managed directly inside the platform.
+## 🎯 The Problem & Our Solution
+Finding a parking spot in busy areas leads to traffic congestion, fuel wastage, and frustration. Existing "smart parking" solutions rely heavily on expensive IoT sensors and external APIs for live availability, making them costly to implement and maintain.
 
-**Unique Selling Point (USP): "Parking = Movie Ticket Booking"**
-- Theatre = Parking Lot
-- Show Time = Time Slot
-- Seat = Parking Slot
-- Ticket = Booking Confirmation
+**Our Solution:** We eliminate the need for expensive hardware. ParkEase works strictly with **affiliated parking owners**. All parking data (slots, capacity, availability) is managed entirely through our database by the owners themselves. 
 
-## Technology Stack
-- **Backend:** Laravel PHP
-- **Database:** MongoDB (via `mongodb/laravel-mongodb`)
-- **Frontend:** Blade Templates + Bootstrap + JavaScript (AJAX for dynamic slot selection)
-- **Mapping & Location:** Google Maps API (for map visualization and navigation support)
+### 🌟 Unique Selling Point (USP)
+**"Parking = Movie Ticket Booking"**
+Our core philosophy makes the system highly intuitive:
+- **Theatre** = Parking Lot
+- **Show Time** = Time Slot
+- **Seat** = Parking Slot (e.g., A1, B2)
+- **Ticket** = Booking Confirmation
 
 ---
 
-## System Modules & Features
+## 🛠 Technology Stack
+- **Backend Framework:** Laravel PHP
+- **Database:** MongoDB (using the official `mongodb/laravel-mongodb` package for Eloquent ORM support)
+- **Frontend:** Blade Templates + Bootstrap + Custom Vanilla JavaScript / AJAX
+- **Mapping & Location:** Google Maps API (for map visualization, geolocation, and navigation)
+- **Payments:** UPI Integration & Custom In-App Wallet System
+
+---
+
+## 📱 Detailed User Flow
+
+1. **Authentication:** The user registers and logs into the platform.
+2. **Search:** 
+   - **Auto:** Allows GPS access; the system runs a geospatial query to find nearby lots.
+   - **Manual:** Enters a specific pincode.
+3. **View Listings:** The user sees a list and a Google Map showing available parking lots, complete with pricing and distance.
+4. **Lot Selection:** The user clicks a parking lot to see details.
+5. **Time Selection:** The user chooses a **Date** and a **Time Slot**.
+6. **Visual Slot Selection:** The user is presented with a visual grid (like a movie theatre). Available slots are green, booked slots are grayed out. They click to select (e.g., Slot B3).
+7. **Payment Selection:** 
+   - Pay using existing **Wallet Balance**.
+   - Pay via **Direct UPI**.
+8. **Confirmation:** The booking is confirmed. The user receives a unique Booking ID and a link to navigate to the lot via Google Maps.
+
+---
+
+## 🏗 Detailed Module Specifications
 
 ### 1. User Module (For Drivers)
-- **Authentication:** Users must log in to book any slots.
-- **Location-Based Search:** Users can allow GPS access to automatically show nearby parking, or manually enter their Pincode to search.
-- **Movie-Style Booking Flow:**
-  1. Select a Date.
-  2. Select a Time Slot.
-  3. Visual Grid Selection: Pick available parking slots (e.g., A1, A2, B1) visually on a grid.
-- **Payments & Wallet System:**
-  - **In-App Wallet:** Users have a digital wallet where they can add and store money.
-  - **Payment Options:** Users can pay for bookings using their Wallet Balance or **directly via UPI**.
-  - **Transaction History:** A dedicated section where users can track all their money added, money spent on bookings, and refunds.
-- **Booking Confirmation:** Receive a unique booking ID.
-- **Navigation:** Use Google Maps integration to navigate to the booked parking location.
+- **Profile & Auth:** Registration, Login, Profile Management.
+- **Wallet System:** 
+  - View current balance.
+  - Add money to the wallet via UPI.
+- **Transaction History:** A dedicated page tracking all financial movements:
+  - `Credits`: Money added to the wallet or refunds.
+  - `Debits`: Money spent on bookings.
+- **Search & Map:** Interactive map showing nearby parking locations.
+- **Booking Engine:** The core movie-ticket style interface preventing double-booking via database-level validation.
+- **My Bookings:** View upcoming and past parking reservations.
 
 ### 2. Owner Module (For Parking Lot Owners)
-- **Registration & Authentication:** Owners register and log in to manage their parking spaces.
-- **Add Parking Area:** Enter details like parking name, address, pincode, pricing, and map location.
-- **Design Layout (Grid Builder):** Owners enter the number of rows and columns (e.g., 5 rows, 4 columns) and the system automatically generates slots.
-- **Booking & Revenue Management:** View slot availability, track upcoming bookings, and monitor earnings from their parking properties.
+- **Registration & Verification:** Owners must register and await Admin approval.
+- **Property Management:** Add new parking lots. Enter Name, Address, Pincode, Hourly Price. Drop a pin on a Google Map to capture exact Latitude and Longitude.
+- **Visual Layout Builder (Grid):** 
+  - The owner inputs `Total Rows` (e.g., 5) and `Slots per Row` (e.g., 4). 
+  - The system automatically generates 20 slot records named A1, A2, A3, A4, B1, B2... up to E4.
+- **Dashboard & Earnings:** Monitor active bookings for the day and track revenue generated from paid slots.
 
 ### 3. Admin Module (System Administrator)
-- **Owner Verification:** Approve or verify registered parking owners before they can list spaces.
-- **System Monitoring:** Manage all parking areas, monitor active bookings, and handle user/owner issues.
-- **Financial Oversight:** Monitor system-wide transactions and payments.
+- **User Management:** View all users and owners. Suspend/Ban accounts if necessary.
+- **Owner Verification:** Review and approve pending owner requests before their lots go live on the map.
+- **System Monitoring:** View platform-wide statistics (total bookings, total revenue, active lots).
+- **Financial Oversight:** Monitor the global transaction log for security and auditing.
 
 ---
 
-## Core Database Structure (MongoDB Collections)
-- **`users`**: Manages all accounts, including the `wallet_balance`.
-- **`parking_lots`**: Stores parking lot details, location data, and layout parameters.
-- **`slots`**: Individual parking spaces (e.g., Slot A1).
-- **`time_slots`**: Defines the booking time intervals.
-- **`bookings`**: Stores the confirmed reservations linking a User, Slot, and Time Slot.
-- **`transactions`**: Logs every financial action (Wallet Top-up, UPI Payment, Refund).
+## 🗄 Database Architecture (MongoDB Collections)
+
+Since we are using MongoDB, data is stored in document collections. We use Laravel's Eloquent to interact with them relationally.
+
+### `users`
+- `_id` (ObjectId)
+- `name` (String)
+- `email` (String)
+- `password` (String)
+- `role` (Enum: 'user', 'owner', 'admin')
+- `wallet_balance` (Decimal/Double, Default: 0.00)
+- `timestamps`
+
+### `parking_lots`
+- `_id` (ObjectId)
+- `owner_id` (ObjectId -> users)
+- `name` (String)
+- `address` (String)
+- `pincode` (String)
+- `location` (GeoJSON Point: coordinates [longitude, latitude] for `$near` queries)
+- `price_per_slot` (Decimal)
+- `layout_type` (Enum: 'grid', 'blueprint')
+- `total_rows` (Integer)
+- `slots_per_row` (Integer)
+- `status` (Enum: 'pending', 'approved', 'rejected')
+- `timestamps`
+
+### `slots`
+- `_id` (ObjectId)
+- `parking_lot_id` (ObjectId -> parking_lots)
+- `slot_number` (String, e.g., 'A1')
+- `row` (String, e.g., 'A')
+- `column` (Integer, e.g., 1)
+- `status` (Enum: 'active', 'inactive' - allows owners to block specific broken slots)
+- `timestamps`
+
+### `time_slots`
+- `_id` (ObjectId)
+- `start_time` (Time)
+- `end_time` (Time)
+*(Note: Can be standardized global hourly slots or custom slots per parking lot)*
+
+### `bookings`
+- `_id` (ObjectId)
+- `booking_id` (String, Unique Alphanumeric)
+- `user_id` (ObjectId -> users)
+- `parking_lot_id` (ObjectId -> parking_lots)
+- `slot_id` (ObjectId -> slots)
+- `time_slot_id` (ObjectId -> time_slots)
+- `date` (Date)
+- `price` (Decimal)
+- `payment_method` (Enum: 'wallet', 'upi')
+- `status` (Enum: 'confirmed', 'cancelled', 'completed')
+- `timestamps`
+
+### `transactions`
+- `_id` (ObjectId)
+- `user_id` (ObjectId -> users)
+- `amount` (Decimal)
+- `type` (Enum: 'credit', 'debit')
+- `method` (Enum: 'upi', 'wallet', 'refund')
+- `status` (Enum: 'success', 'failed', 'pending')
+- `reference_id` (String - links to UPI Ref or Booking ID)
+- `timestamps`
+
+---
+
+## 🚀 Future Scope
+- **Blueprint Layout Mapping:** Allowing owners to upload an image of their parking lot and click to visually place slots instead of using the standard grid generator.
+- **QR Code Check-in:** Generating a QR code on the booking ticket that the parking attendant scans upon entry.
+- **AI Analytics:** Predicting parking demand based on historical data.
+
+---
+*This README serves as the master specification for the development team to ensure all modules align with the core business logic.*
