@@ -49,6 +49,20 @@
     }).addTo(map);
     
     let markers = [];
+    let bounds = new L.LatLngBounds();
+
+    if (lat && lng) {
+        // Add blue pointer for current location like Google Maps
+        L.circleMarker([lat, lng], {
+            color: '#ffffff',
+            fillColor: '#4285F4',
+            fillOpacity: 1,
+            radius: 8,
+            weight: 2,
+            zIndexOffset: 1000
+        }).addTo(map).bindPopup("<b>You are here</b>");
+        bounds.extend([lat, lng]);
+    }
 
     // Fetch API Data
     let apiUrl = '/api/search?';
@@ -56,18 +70,23 @@
     if (lat && lng) apiUrl += `lat=${lat}&lng=${lng}`;
 
     fetch(apiUrl)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
         .then(data => {
             document.getElementById('loadingIndicator').classList.add('d-none');
             
             const parkings = data.data;
             if (parkings.length === 0) {
                 document.getElementById('noResults').classList.remove('d-none');
+                if (lat && lng) {
+                    map.fitBounds(bounds, {maxZoom: 14});
+                }
                 return;
             }
 
             const container = document.getElementById('resultsContainer');
-            let bounds = new L.LatLngBounds();
 
             parkings.forEach(parking => {
                 // Add Marker
@@ -85,7 +104,7 @@
                         <div>
                             <h5 class="fw-bold mb-1" style="color: var(--primary);">${parking.name}</h5>
                             <p class="text-muted small mb-2">${parking.address}, ${parking.city} - ${parking.pincode}</p>
-                            <span class="badge bg-dark border">₹${parking.price_per_slot} / Slot</span>
+                            <span class="badge bg-dark border text-light">₹${parking.price_per_slot} / Slot</span>
                         </div>
                         <div>
                             <a href="/parking/${parking._id}" class="btn btn-primary-custom btn-sm">Book Now</a>
@@ -99,8 +118,8 @@
             });
 
             // Fit map to markers
-            if(parkings.length > 0) {
-                map.fitBounds(bounds, {padding: [50, 50]});
+            if(parkings.length > 0 || (lat && lng)) {
+                map.fitBounds(bounds, {padding: [50, 50], maxZoom: 14});
             }
         })
         .catch(err => {

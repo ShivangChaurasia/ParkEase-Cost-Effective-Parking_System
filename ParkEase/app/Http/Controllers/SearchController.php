@@ -29,7 +29,10 @@ class SearchController extends Controller
             $radius = 10; // 10 km radius
 
             $parkings = $parkings->filter(function ($parking) use ($lat, $lng, $radius) {
-                return $this->calculateDistance($lat, $lng, $parking->latitude, $parking->longitude) <= $radius;
+                if (!isset($parking->latitude) || !isset($parking->longitude) || $parking->latitude === '' || $parking->longitude === '') {
+                    return false;
+                }
+                return $this->calculateDistance($lat, $lng, (float)$parking->latitude, (float)$parking->longitude) <= $radius;
             })->values();
         }
 

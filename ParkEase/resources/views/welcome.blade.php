@@ -54,7 +54,7 @@
 </div>
 @endsection
 
-@stack('scripts')
+@push('scripts')
 <script>
     function useIpFallback(btn) {
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Using IP Fallback...';
@@ -100,3 +100,4 @@
         }
     });
 </script>
+@endpush
