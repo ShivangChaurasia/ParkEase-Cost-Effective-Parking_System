@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Models;
+
+use MongoDB\Laravel\Eloquent\Model;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+
+#[Fillable([
+    'user_id',
+    'parking_lot_id',
+    'slot_id',
+    'time_slot_id',
+    'date',
+    'price',
+    'status',
+    'booking_id'
+])]
+class Booking extends Model
+{
+    protected $collection = 'bookings';
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function parkingLot()
+    {
+        return $this->belongsTo(ParkingLot::class, 'parking_lot_id');
+    }
+
+    public function slot()
+    {
+        return $this->belongsTo(Slot::class, 'slot_id');
+    }
+
+    public function timeSlot()
+    {
+        return $this->belongsTo(TimeSlot::class, 'time_slot_id');
+    }
+}
