@@ -19,6 +19,18 @@ Route::get('/parking/{id}', function ($id) {
     return view('parking', ['id' => $id]);
 });
 
+Route::get('/login', function () {
+    return view('login');
+})->name('login');
+
+Route::get('/register', function () {
+    return view('register');
+})->name('register');
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+});
+
 Route::post('/api/register', [AuthController::class, 'register']);
 Route::post('/api/login', [AuthController::class, 'login']);
 Route::post('/api/logout', [AuthController::class, 'logout'])->middleware('auth');

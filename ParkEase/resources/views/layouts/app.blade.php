@@ -167,18 +167,8 @@
                     <li class="nav-link-item"><a class="nav-link active" href="/">Home</a></li>
                     <li class="nav-link-item"><a class="nav-link" href="#about">How it Works</a></li>
                 </ul>
-                <div class="d-flex">
-                    @auth
-                        @if(Auth::user()->role === 'owner')
-                            <a href="/owner/dashboard" class="btn btn-outline-light me-2">Dashboard</a>
-                        @else
-                            <a href="/dashboard" class="btn btn-outline-light me-2">My Bookings</a>
-                        @endif
-                        <button class="btn btn-primary-custom" onclick="logout()">Logout</button>
-                    @else
-                        <a href="/login" class="btn btn-outline-light me-2">Login</a>
-                        <a href="/register" class="btn btn-primary-custom">Register</a>
-                    @endauth
+                <div class="d-flex align-items-center" id="nav-auth-container">
+                    <!-- Clerk Auth will be rendered here via JS -->
                 </div>
             </div>
         </div>
@@ -201,21 +191,46 @@
     <!-- Leaflet.js JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- App Logic -->
+    <!-- App Logic & Clerk Setup -->
+    <script
+        data-clerk-publishable-key="{{ env('VITE_CLERK_PUBLISHABLE_KEY', 'pk_test_YnJhdmUtc3BhcnJvdy03OS5jbGVyay5hY2NvdW50cy5kZXYk') }}"
+        src="https://brave-sparrow-79.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+        type="text/javascript"
+    ></script>
+
     <script>
-        function logout() {
-            fetch('/api/logout', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            }).then(response => {
-                if(response.ok) {
-                    window.location.href = '/login';
-                }
-            });
-        }
+        document.addEventListener("DOMContentLoaded", async function () {
+            await Clerk.load();
+
+            const authContainer = document.getElementById('nav-auth-container');
+
+            if (Clerk.user) {
+                // User is signed in
+                const dashboardLink = document.createElement('a');
+                dashboardLink.href = "/dashboard";
+                dashboardLink.className = "btn btn-outline-light me-3";
+                dashboardLink.innerText = "Dashboard";
+                authContainer.appendChild(dashboardLink);
+
+                const userButtonDiv = document.createElement('div');
+                authContainer.appendChild(userButtonDiv);
+                Clerk.mountUserButton(userButtonDiv, {
+                    afterSignOutUrl: '/',
+                    signInUrl: '/login'
+                });
+            } else {
+                // User is not signed in
+                authContainer.innerHTML = `
+                    <a href="/login" class="btn btn-outline-light me-2">Login</a>
+                    <a href="/register" class="btn btn-primary-custom">Register</a>
+                `;
+            }
+
+            // Trigger the page's specific Clerk render function if it exists
+            if (typeof renderClerkComponent === 'function') {
+                renderClerkComponent();
+            }
+        });
     </script>
     @stack('scripts')
 </body>

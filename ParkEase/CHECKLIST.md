@@ -13,6 +13,8 @@ This document tracks the progress of the ParkEase project. Co-developers should 
 - [x] Create automated backend test flow (`app/Console/Commands/TestBackendFlow.php`).
 
 ### Frontend & UI
+- [x] Integrated Clerk Authentication Vanilla JS SDK for secure login and registration.
+- [x] Created the initial User Dashboard view (`/dashboard`).
 - [x] Build core Blade templates (`layouts/app`, `welcome`, `search`, `parking`).
 - [x] Implement custom Light/Monochrome Theme (Black navbar, white bg).
 - [x] Add Leaflet.js maps with dynamic bounds based on search results.
@@ -24,7 +26,6 @@ This document tracks the progress of the ParkEase project. Co-developers should 
 
 ### Frontend Polish & Integration
 - [ ] Connect the frontend Booking confirmation button to the backend API properly and handle UI state transitions.
-- [ ] Create the User Dashboard view (`/dashboard`) to list a user's active/past bookings.
 - [ ] Create the Owner Dashboard view (`/owner/dashboard`) to manage parking lots and view revenue.
 - [ ] Implement robust frontend form validation (e.g., login, registration, adding new parking lots).
 
