@@ -193,8 +193,8 @@
 
     <!-- App Logic & Clerk Setup -->
     <script
-        data-clerk-publishable-key="{{ env('VITE_CLERK_PUBLISHABLE_KEY', 'pk_test_YnJhdmUtc3BhcnJvdy03OS5jbGVyay5hY2NvdW50cy5kZXYk') }}"
-        src="https://brave-sparrow-79.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+        data-clerk-publishable-key="{{ env('VITE_CLERK_PUBLISHABLE_KEY') }}"
+        src="{{ env('CLERK_JS_URL') }}"
         type="text/javascript"
     ></script>
 
@@ -206,29 +206,99 @@
 
             if (Clerk.user) {
                 // User is signed in
-                const dashboardLink = document.createElement('a');
-                dashboardLink.href = "/dashboard";
-                dashboardLink.className = "btn btn-outline-light me-3";
-                dashboardLink.innerText = "Dashboard";
-                authContainer.appendChild(dashboardLink);
+                @auth
+                    const currentRole = '{{ auth()->user()->role }}';
+                    const hasCompletedOnboarding = '{{ auth()->user()->onboarding_completed }}' === '1' || '{{ auth()->user()->onboarding_completed }}' === 'true';
+                    
+                    if (hasCompletedOnboarding) {
+                        const roleToggleBtn = document.createElement('a');
+                        roleToggleBtn.href = "/switch-role";
+                        roleToggleBtn.className = "btn btn-warning me-3 btn-sm fw-bold";
+                        roleToggleBtn.innerText = currentRole === 'owner' ? "Switch to User" : "Switch to Owner";
+                        authContainer.appendChild(roleToggleBtn);
 
+                        const dashboardLink = document.createElement('a');
+                        dashboardLink.href = currentRole === 'owner' ? "/owner/dashboard" : "/dashboard";
+                        dashboardLink.className = "btn btn-outline-light me-3";
+                        dashboardLink.innerText = currentRole === 'owner' ? "Owner Dashboard" : "Dashboard";
+                        authContainer.appendChild(dashboardLink);
+                    }
+                @else
+                    const dashboardLink = document.createElement('a');
+                    dashboardLink.href = "/dashboard";
+                    dashboardLink.className = "btn btn-outline-light me-3";
+                    dashboardLink.innerText = "Dashboard";
+                    authContainer.appendChild(dashboardLink);
+                @endauth
+
+                @auth
+                    if (currentRole === 'owner' && '{{ auth()->user()->photo_path }}') {
+                        const hostPhoto = document.createElement('img');
+                        hostPhoto.src = '/{{ auth()->user()->photo_path }}';
+                        hostPhoto.className = 'rounded-circle me-3 border border-2 border-primary';
+                        hostPhoto.style.width = '36px';
+                        hostPhoto.style.height = '36px';
+                        hostPhoto.style.objectFit = 'cover';
+                        authContainer.appendChild(hostPhoto);
+                    }
+                @endauth
+                
                 const userButtonDiv = document.createElement('div');
                 authContainer.appendChild(userButtonDiv);
                 Clerk.mountUserButton(userButtonDiv, {
                     afterSignOutUrl: '/',
                     signInUrl: '/login'
                 });
+
+                // Sync with Laravel Backend
+                if (!sessionStorage.getItem('clerk_synced')) {
+                    const token = await Clerk.session.getToken();
+                    try {
+                        const response = await fetch('/api/auth/clerk-sync', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                clerk_id: Clerk.user.id,
+                                email: Clerk.user.primaryEmailAddress ? Clerk.user.primaryEmailAddress.emailAddress : '',
+                                first_name: Clerk.user.firstName || '',
+                                last_name: Clerk.user.lastName || ''
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            sessionStorage.setItem('clerk_synced', 'true');
+                            if (data.redirect && window.location.pathname !== data.redirect) {
+                                window.location.href = data.redirect;
+                            } else {
+                                window.location.reload(); // Reload to apply Laravel Auth state to UI
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Failed to sync with backend', e);
+                    }
+                } else {
+                    if (typeof renderClerkComponent === 'function') {
+                        renderClerkComponent();
+                    }
+                }
+
             } else {
                 // User is not signed in
+                sessionStorage.removeItem('clerk_synced');
                 authContainer.innerHTML = `
                     <a href="/login" class="btn btn-outline-light me-2">Login</a>
                     <a href="/register" class="btn btn-primary-custom">Register</a>
                 `;
-            }
-
-            // Trigger the page's specific Clerk render function if it exists
-            if (typeof renderClerkComponent === 'function') {
-                renderClerkComponent();
+                
+                if (typeof renderClerkComponent === 'function') {
+                    renderClerkComponent();
+                }
             }
         });
     </script>

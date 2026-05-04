@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'x_position',
     'y_position',
     'slot_type',
+    'vehicle_type',
     'status'
 ])]
 class Slot extends Model

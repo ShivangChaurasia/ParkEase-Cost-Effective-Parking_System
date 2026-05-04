@@ -89,9 +89,16 @@
             const container = document.getElementById('resultsContainer');
 
             parkings.forEach(parking => {
+                const parkingId = parking._id || parking.id;
+
                 // Add Marker
                 let marker = L.marker([parking.latitude, parking.longitude]).addTo(map);
-                marker.bindPopup(`<b>${parking.name}</b><br>${parking.address}<br>₹${parking.price_per_slot}/slot`);
+                marker.bindPopup(`
+                    <b>${parking.name}</b><br>
+                    ${parking.address}<br>
+                    Car: ₹${parking.car_price || 0} | Bike: ₹${parking.bike_price || 0}<br>
+                    <a href="/parking/${parkingId}" class="btn btn-primary-custom btn-sm w-100 mt-2">Book Now</a>
+                `);
                 markers.push(marker);
                 bounds.extend([parking.latitude, parking.longitude]);
 
@@ -104,10 +111,13 @@
                         <div>
                             <h5 class="fw-bold mb-1" style="color: var(--primary);">${parking.name}</h5>
                             <p class="text-muted small mb-2">${parking.address}, ${parking.city} - ${parking.pincode}</p>
-                            <span class="badge bg-dark border text-light">₹${parking.price_per_slot} / Slot</span>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-dark border text-light">Car: ₹${parking.car_price || 0}</span>
+                                <span class="badge bg-secondary border text-light">Bike: ₹${parking.bike_price || 0}</span>
+                            </div>
                         </div>
                         <div>
-                            <a href="/parking/${parking._id}" class="btn btn-primary-custom btn-sm">Book Now</a>
+                            <a href="/parking/${parkingId}" class="btn btn-primary-custom btn-sm">Book Now</a>
                         </div>
                     </div>
                 `;

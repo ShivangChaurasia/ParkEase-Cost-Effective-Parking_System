@@ -41,7 +41,9 @@ class TestBackendFlow extends Command
             'city' => 'New York',
             'latitude' => 40.7128,
             'longitude' => -74.0060,
-            'price_per_slot' => 15.00,
+            'car_price' => 50.00,
+            'bike_price' => 20.00,
+            'bus_price' => 100.00,
             'layout_type' => 'grid',
             'total_rows' => 3,
             'slots_per_row' => 4,
@@ -67,13 +69,20 @@ class TestBackendFlow extends Command
         $date = '2026-05-01';
         $timeSlotId = '10:00-11:00';
 
+        $price = match ($slotToBook->vehicle_type ?? 'car') {
+            'car' => $parkingLot->car_price,
+            'bike' => $parkingLot->bike_price,
+            'bus' => $parkingLot->bus_price,
+            default => 0,
+        };
+
         $booking = Booking::create([
             'user_id' => $user->_id,
             'parking_lot_id' => $parkingLot->_id,
             'slot_id' => $slotToBook->_id,
             'time_slot_id' => $timeSlotId,
             'date' => $date,
-            'price' => $parkingLot->price_per_slot,
+            'price' => $price,
             'status' => 'confirmed',
             'booking_id' => strtoupper(Str::random(10)),
         ]);

@@ -13,8 +13,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'date',
     'price',
     'status',
-    'booking_id'
-])]
+    'booking_id',
+    'customer_name',
+    'customer_phone',
+    'booking_email',
+    'vehicle_type',
+    'payment_status',
+    'is_manual'
+])
 class Booking extends Model
 {
     protected $collection = 'bookings';

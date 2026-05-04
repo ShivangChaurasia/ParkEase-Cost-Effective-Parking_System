@@ -1,0 +1,256 @@
+@extends('layouts.app')
+
+@section('title', 'Owner Dashboard')
+
+@section('content')
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold">Owner Dashboard</h2>
+            <p class="text-muted">Manage your parking areas and view bookings.</p>
+        </div>
+    </div>
+
+    <!-- Host Profile Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card p-4 d-flex flex-row align-items-center gap-4">
+                @if(auth()->user()->photo_path)
+                    <img src="/{{ auth()->user()->photo_path }}" alt="Host Photo" class="rounded-circle border border-3 border-dark" style="width: 80px; height: 80px; object-fit: cover;">
+                @else
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 24px;">
+                        <i class="bi bi-person"></i>
+                    </div>
+                @endif
+                <div>
+                    <h5 class="fw-bold mb-1">{{ auth()->user()->name }}</h5>
+                    <p class="text-muted mb-0 small">Phone: {{ auth()->user()->phone }} | Aadhaar: **** **** {{ substr(auth()->user()->aadhaar_no, -4) }}</p>
+                </div>
+                <div class="ms-auto">
+                    <a href="/owner/kyc" class="btn btn-outline-dark btn-sm">Edit KYC Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card p-4 text-center">
+                <h5 class="text-muted">Total Parking Areas</h5>
+                <h2 class="fw-bold">{{ $totalParkingLots }}</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 text-center">
+                <h5 class="text-muted">Total Slots</h5>
+                <h2 class="fw-bold">{{ $totalSlots }}</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 text-center">
+                <h5 class="text-muted">Active Bookings</h5>
+                <h2 class="fw-bold text-success">{{ $activeBookings }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Add Parking Lot Form -->
+        <div class="col-lg-7 mb-5">
+            <div class="card p-4">
+                <h4 class="mb-4 fw-bold">Register New Parking Area</h4>
+                <form id="addParkingForm">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Parking Name</label>
+                            <input type="text" class="form-control" name="name" required placeholder="e.g. City Center Parking">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-control" name="address" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Pincode</label>
+                            <input type="text" class="form-control" name="pincode" required>
+                        </div>
+                        
+                        <div class="col-md-12 mt-4">
+                            <label class="form-label fw-bold">Location (Click map to pin)</label>
+                            <div id="ownerMap" style="height: 300px; border-radius: 8px; border: 1px solid var(--border-color);"></div>
+                            <input type="hidden" name="latitude" id="latInput" required>
+                            <input type="hidden" name="longitude" id="lngInput" required>
+                            <div class="text-muted small mt-1">Latitude: <span id="latDisplay">-</span>, Longitude: <span id="lngDisplay">-</span></div>
+                        </div>
+
+                        <div class="col-md-4 mt-4">
+                            <label class="form-label">Car Price (₹/Slot)</label>
+                            <input type="number" class="form-control" name="car_price" min="0" required>
+                        </div>
+                        <div class="col-md-4 mt-4">
+                            <label class="form-label">Bike Price (₹/Slot)</label>
+                            <input type="number" class="form-control" name="bike_price" min="0" required>
+                        </div>
+                        <div class="col-md-4 mt-4">
+                            <label class="form-label">Bus Price (₹/Slot)</label>
+                            <input type="number" class="form-control" name="bus_price" min="0" required>
+                        </div>
+                        <div class="col-md-4 mt-4">
+                            <label class="form-label">Opening Time</label>
+                            <input type="time" class="form-control" name="opening_time" required>
+                        </div>
+                        <div class="col-md-4 mt-4">
+                            <label class="form-label">Closing Time</label>
+                            <input type="time" class="form-control" name="closing_time" required>
+                        </div>
+
+                        <div class="col-12 mt-4">
+                            <label class="form-label fw-bold">Slot Configuration</label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Car Slots</label>
+                            <input type="number" class="form-control" name="car_slots" min="0" value="0" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Bike Slots</label>
+                            <input type="number" class="form-control" name="bike_slots" min="0" value="0" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Bus Slots</label>
+                            <input type="number" class="form-control" name="bus_slots" min="0" value="0" required>
+                        </div>
+                        
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-primary-custom w-100" id="submitBtn">Register Parking Area</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Registered Parking Lots -->
+        <div class="col-lg-5">
+            <h4 class="mb-4 fw-bold">Your Parking Areas</h4>
+            @if($parkingLots->isEmpty())
+                <div class="alert alert-light border text-center p-4">
+                    <p class="mb-0 text-muted">You haven't registered any parking areas yet.</p>
+                </div>
+            @else
+                <div class="d-flex flex-column gap-3">
+                    @foreach($parkingLots as $lot)
+                        <div class="card p-3">
+                            <h5 class="fw-bold mb-1">{{ $lot->name }}</h5>
+                            <p class="text-muted small mb-2"><i class="bi bi-geo-alt"></i> {{ $lot->address }}, {{ $lot->city }} - {{ $lot->pincode }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-dark">Car: ₹{{ $lot->car_price ?? 0 }}</span>
+                                    <span class="badge bg-secondary">Bike: ₹{{ $lot->bike_price ?? 0 }}</span>
+                                    <span class="badge border text-dark">Bus: ₹{{ $lot->bus_price ?? 0 }}</span>
+                                </div>
+                                <span class="small text-muted">{{ $lot->opening_time }} - {{ $lot->closing_time }}</span>
+                            </div>
+                            <div class="mt-3 small">
+                                <strong>Slots:</strong> 
+                                {{ $lot->car_slots ?? 0 }} Cars | 
+                                {{ $lot->bike_slots ?? 0 }} Bikes | 
+                                {{ $lot->bus_slots ?? 0 }} Buses
+                            </div>
+                            <div class="mt-3">
+                                <a href="/owner/parking/{{ $lot->_id }}/manage" class="btn btn-dark btn-sm w-100 fw-bold">Manage & Spot Book</a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Initialize Map
+        const map = L.map('ownerMap').setView([20.5937, 78.9629], 5); // Center of India
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        let marker;
+
+        // Try to get user's location to center map
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                map.setView([position.coords.latitude, position.coords.longitude], 12);
+            });
+        }
+
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            document.getElementById('latInput').value = lat;
+            document.getElementById('lngInput').value = lng;
+            document.getElementById('latDisplay').innerText = lat.toFixed(6);
+            document.getElementById('lngDisplay').innerText = lng.toFixed(6);
+
+            if (marker) {
+                marker.setLatLng(e.latlng);
+            } else {
+                marker = L.marker(e.latlng).addTo(map);
+            }
+        });
+
+        // Form Submit
+        document.getElementById('addParkingForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = 'Registering...';
+            btn.disabled = true;
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Wait for Clerk token
+            let token = '';
+            if (window.Clerk && window.Clerk.session) {
+                token = await window.Clerk.session.getToken();
+            }
+
+            try {
+                const response = await fetch('/api/owner/parking-lots', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('Parking area registered successfully!');
+                    window.location.reload();
+                } else {
+                    const errorData = await response.json();
+                    alert('Error: ' + (errorData.message || 'Validation failed'));
+                    btn.innerHTML = 'Register Parking Area';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Something went wrong.');
+                btn.innerHTML = 'Register Parking Area';
+                btn.disabled = false;
+            }
+        });
+    });
+</script>
+@endpush

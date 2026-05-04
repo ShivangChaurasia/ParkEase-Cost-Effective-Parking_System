@@ -13,10 +13,17 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'city',
     'latitude',
     'longitude',
-    'price_per_slot',
+    'car_price',
+    'bike_price',
+    'bus_price',
     'layout_type',
     'total_rows',
-    'slots_per_row'
+    'slots_per_row',
+    'car_slots',
+    'bike_slots',
+    'bus_slots',
+    'opening_time',
+    'closing_time'
 ])]
 class ParkingLot extends Model
 {
