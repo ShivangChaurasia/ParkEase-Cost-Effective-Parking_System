@@ -431,7 +431,7 @@
 
     document.getElementById('confirmBookingBtn').addEventListener('click', function() {
         if (!isLoggedIn) {
-            window.location.href = '/register';
+            window.location.href = '/login';
             return;
         }
         const bookingData = {

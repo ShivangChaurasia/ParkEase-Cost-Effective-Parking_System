@@ -98,7 +98,7 @@
                     <b>${parking.name}</b><br>
                     ${parking.address}<br>
                     Car: ₹${parking.car_price || 0} | Bike: ₹${parking.bike_price || 0}<br>
-                    <a href="${isLoggedIn ? '/parking/' + parkingId : '/register'}" class="btn btn-primary-custom btn-sm w-100 mt-2">Book Now</a>
+                    <a href="${isLoggedIn ? '/parking/' + parkingId : '/login?intended=/parking/' + parkingId}" class="btn btn-primary-custom btn-sm w-100 mt-2">Book Now</a>
                 `);
                 markers.push(marker);
                 bounds.extend([parking.latitude, parking.longitude]);
@@ -118,7 +118,7 @@
                             </div>
                         </div>
                         <div>
-                            <a href="${isLoggedIn ? '/parking/' + parkingId : '/register'}" class="btn btn-primary-custom btn-sm">Book Now</a>
+                            <a href="${isLoggedIn ? '/parking/' + parkingId : '/login?intended=/parking/' + parkingId}" class="btn btn-primary-custom btn-sm">Book Now</a>
                         </div>
                     </div>
                 `;

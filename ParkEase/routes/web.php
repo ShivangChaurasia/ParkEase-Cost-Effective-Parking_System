@@ -13,29 +13,23 @@ Route::get('/', function () {
 });
 
 Route::get('/search', function () {
-    if (!Auth::check()) {
-        return redirect('/register');
-    }
     return view('search');
-})->middleware(['auth', 'onboarded']);
+});
 
 Route::get('/parking/{id}', function ($id) {
-    if (!Auth::check()) {
-        return redirect('/register');
-    }
     $lot = \App\Models\ParkingLot::findOrFail($id);
     return view('parking', ['id' => $id, 'lot' => $lot]);
 })->middleware(['auth', 'onboarded']);
 
 Route::get('/checkout', function (Illuminate\Http\Request $request) {
-    if (!Auth::check()) {
-        return redirect('/register');
-    }
     $lot = \App\Models\ParkingLot::findOrFail($request->lot_id);
     return view('checkout', ['lot' => $lot]);
 })->middleware(['auth', 'onboarded']);
 
-Route::get('/login', function () {
+Route::get('/login', function (Illuminate\Http\Request $request) {
+    if ($request->has('intended')) {
+        session()->put('url.intended', $request->intended);
+    }
     return view('login');
 })->name('login');
 
