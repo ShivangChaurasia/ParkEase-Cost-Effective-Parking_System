@@ -80,10 +80,14 @@ class AuthController extends Controller
             return '/onboarding';
         }
 
+        // Check for intended redirect (e.g. from a protected booking route)
+        if (session()->has('url.intended')) {
+            return session()->pull('url.intended');
+        }
+
         return match ($user->role) {
             'admin' => '/admin/dashboard',
-            'owner' => '/owner/dashboard',
-            default => '/',
+            default => '/dashboard',
         };
     }
 

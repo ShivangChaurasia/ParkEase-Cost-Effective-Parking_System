@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'vehicle_type',
     'payment_status',
     'is_manual'
-])
+]) ]
 class Booking extends Model
 {
     protected $collection = 'bookings';

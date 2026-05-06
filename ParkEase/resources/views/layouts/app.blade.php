@@ -211,17 +211,31 @@
                     const hasCompletedOnboarding = '{{ auth()->user()->onboarding_completed }}' === '1' || '{{ auth()->user()->onboarding_completed }}' === 'true';
                     
                     if (hasCompletedOnboarding) {
-                        const roleToggleBtn = document.createElement('a');
-                        roleToggleBtn.href = "/switch-role";
-                        roleToggleBtn.className = "btn btn-warning me-3 btn-sm fw-bold";
-                        roleToggleBtn.innerText = currentRole === 'owner' ? "Switch to User" : "Switch to Owner";
-                        authContainer.appendChild(roleToggleBtn);
-
                         const dashboardLink = document.createElement('a');
-                        dashboardLink.href = currentRole === 'owner' ? "/owner/dashboard" : "/dashboard";
+                        dashboardLink.href = "/dashboard";
                         dashboardLink.className = "btn btn-outline-light me-3";
-                        dashboardLink.innerText = currentRole === 'owner' ? "Owner Dashboard" : "Dashboard";
+                        dashboardLink.innerText = "Dashboard";
                         authContainer.appendChild(dashboardLink);
+
+                        if (currentRole === 'owner') {
+                            const ownerDashboardLink = document.createElement('a');
+                            ownerDashboardLink.href = "/owner/dashboard";
+                            ownerDashboardLink.className = "btn btn-outline-light me-3";
+                            ownerDashboardLink.innerText = "Owner Dashboard";
+                            authContainer.appendChild(ownerDashboardLink);
+
+                            const roleToggleBtn = document.createElement('a');
+                            roleToggleBtn.href = "/switch-role";
+                            roleToggleBtn.className = "btn btn-warning me-3 btn-sm fw-bold";
+                            roleToggleBtn.innerText = "Switch to User";
+                            authContainer.appendChild(roleToggleBtn);
+                        } else {
+                            const roleToggleBtn = document.createElement('a');
+                            roleToggleBtn.href = "/switch-role";
+                            roleToggleBtn.className = "btn btn-warning me-3 btn-sm fw-bold";
+                            roleToggleBtn.innerText = "Become Host";
+                            authContainer.appendChild(roleToggleBtn);
+                        }
                     }
                 @else
                     const dashboardLink = document.createElement('a');
