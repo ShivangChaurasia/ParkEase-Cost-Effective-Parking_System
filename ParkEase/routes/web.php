@@ -17,9 +17,12 @@ Route::get('/search', function () {
 });
 
 Route::get('/parking/{id}', function ($id) {
+    if (!Auth::check()) {
+        return redirect('/register');
+    }
     $lot = \App\Models\ParkingLot::findOrFail($id);
     return view('parking', ['id' => $id, 'lot' => $lot]);
-});
+})->middleware(['auth', 'onboarded']);
 
 Route::get('/checkout', function (Illuminate\Http\Request $request) {
     if (!Auth::check()) {
