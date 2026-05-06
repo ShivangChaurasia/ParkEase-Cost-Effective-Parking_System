@@ -82,8 +82,7 @@ class AuthController extends Controller
 
         return match ($user->role) {
             'admin' => '/admin/dashboard',
-            'owner' => '/owner/dashboard',
-            default => '/',
+            default => '/dashboard',
         };
     }
 

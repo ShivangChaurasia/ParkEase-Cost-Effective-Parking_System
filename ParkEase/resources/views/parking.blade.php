@@ -293,6 +293,7 @@
     let selectedSlots = []; 
     let currentFilter = 'car';
     let allSlots = [];
+    const isLoggedIn = @json(Auth::check());
     
     const prices = {
         car: {{ $lot->car_price ?? 0 }},
@@ -429,6 +430,10 @@
     }
 
     document.getElementById('confirmBookingBtn').addEventListener('click', function() {
+        if (!isLoggedIn) {
+            window.location.href = '/register';
+            return;
+        }
         const bookingData = {
             lot_id: parkingId,
             slots: selectedSlots,

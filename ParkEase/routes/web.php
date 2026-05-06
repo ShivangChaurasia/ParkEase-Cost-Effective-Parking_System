@@ -22,6 +22,9 @@ Route::get('/parking/{id}', function ($id) {
 });
 
 Route::get('/checkout', function (Illuminate\Http\Request $request) {
+    if (!Auth::check()) {
+        return redirect('/register');
+    }
     $lot = \App\Models\ParkingLot::findOrFail($request->lot_id);
     return view('checkout', ['lot' => $lot]);
 })->middleware(['auth', 'onboarded']);

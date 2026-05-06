@@ -41,6 +41,7 @@
     const pincode = urlParams.get('pincode');
     const lat = urlParams.get('lat');
     const lng = urlParams.get('lng');
+    const isLoggedIn = @json(Auth::check());
 
     // Initialize Map
     let map = L.map('map').setView([20.5937, 78.9629], 5); // Default to India center
@@ -97,7 +98,7 @@
                     <b>${parking.name}</b><br>
                     ${parking.address}<br>
                     Car: ₹${parking.car_price || 0} | Bike: ₹${parking.bike_price || 0}<br>
-                    <a href="/parking/${parkingId}" class="btn btn-primary-custom btn-sm w-100 mt-2">Book Now</a>
+                    <a href="${isLoggedIn ? '/parking/' + parkingId : '/register'}" class="btn btn-primary-custom btn-sm w-100 mt-2">Book Now</a>
                 `);
                 markers.push(marker);
                 bounds.extend([parking.latitude, parking.longitude]);
@@ -117,7 +118,7 @@
                             </div>
                         </div>
                         <div>
-                            <a href="/parking/${parkingId}" class="btn btn-primary-custom btn-sm">Book Now</a>
+                            <a href="${isLoggedIn ? '/parking/' + parkingId : '/register'}" class="btn btn-primary-custom btn-sm">Book Now</a>
                         </div>
                     </div>
                 `;

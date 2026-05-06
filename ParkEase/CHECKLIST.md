@@ -11,8 +11,9 @@ This document tracks the progress of the ParkEase project. Co-developers should 
 - [x] Implement Search filtering by Pincode and Haversine distance (lat/lng).
 - [x] Handle edge cases for missing lat/lng data to prevent 500 errors.
 - [x] Create automated backend test flow (`app/Console/Commands/TestBackendFlow.php`).
-- [x] **New**: Optimized Slot Fetching & Dashboard queries to prevent timeouts and reduce payload size.
-- [x] **New**: Implemented Guest Booking persistence with email-to-account synchronization logic.
+- [x] Optimized Slot Fetching & Dashboard queries to prevent timeouts and reduce payload size.
+- [x] Implemented Guest Booking persistence with email-to-account synchronization logic.
+- [x] **New**: Fixed syntax error in `Booking.php` model that caused API 500 errors.
 
 ### Frontend & UI
 - [x] Integrated Clerk Authentication Vanilla JS SDK for secure login and registration.
@@ -25,6 +26,8 @@ This document tracks the progress of the ParkEase project. Co-developers should 
 - [x] **Owner Tools**: Created `/owner/dashboard` and `/owner/parking/{id}/manage` for manual spot bookings.
 - [x] **Responsiveness**: Fully optimized grid and dashboard views for mobile, tablet, and desktop.
 - [x] **Live Dashboard**: Added real-time "Live" status badges and timers for active parking bookings.
+- [x] **Access Control**: Refined navigation so all users land on `/dashboard`; "Owner Dashboard" visible only to active hosts.
+- [x] **Guest Flow Security**: Implemented mandatory registration/login redirects when clicking "Book Now" or entering checkout.
 
 ## 🚧 What to Work on Next (Pending Tasks)
 
