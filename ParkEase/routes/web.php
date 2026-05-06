@@ -13,8 +13,11 @@ Route::get('/', function () {
 });
 
 Route::get('/search', function () {
+    if (!Auth::check()) {
+        return redirect('/register');
+    }
     return view('search');
-});
+})->middleware(['auth', 'onboarded']);
 
 Route::get('/parking/{id}', function ($id) {
     if (!Auth::check()) {
