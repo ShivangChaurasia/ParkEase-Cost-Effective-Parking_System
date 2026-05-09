@@ -1,58 +1,82 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ParkEase - Cost-Effective Parking System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+ParkEase is a modern, cost-effective parking management system built with Laravel, MongoDB, and Vanilla JavaScript. It features a premium Glassmorphism UI, secure Clerk Authentication, and a robust dual-payment integration (Razorpay & Manual UPI QR).
 
-## About Laravel
+## 🚀 Tech Stack
+- **Backend**: Laravel 11
+- **Database**: MongoDB (via `mongodb/laravel-mongodb`)
+- **Frontend**: Blade Templates, Bootstrap 5, Vanilla JS
+- **Authentication**: Clerk Vanilla JS SDK
+- **Payment Gateway**: Razorpay PHP SDK
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 💳 Payment Integrations
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+ParkEase comes with a production-ready, highly secure checkout flow supporting two main payment methods:
 
-## Learning Laravel
+### 1. Razorpay (Online Payment)
+The checkout uses a **UPI-First** Razorpay integration, optimized for mobile and desktop. 
+- Automatically pre-fills user details (Name, Email, Phone).
+- Prioritizes Google Pay, PhonePe, and Paytm intent flows.
+- Validates payments securely via cryptographic signatures (`razorpay_signature`) on the Laravel backend.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 2. Manual UPI QR (Fallback / Demo Mode)
+For hackathons or manual operations, users can choose "Scan & Pay via UPI".
+- Displays a static PhonePe/GPay QR code.
+- Captures confirmation via a sleek modal.
+- Marks the booking status as `pending_verification` in MongoDB for manual admin approval.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 🛠️ Installation & Setup
 
-## Agentic Development
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/ShivangChaurasia/ParkEase-Cost-Effective-Parking_System.git
+   cd ParkEase
+   ```
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+2. **Install PHP Dependencies:**
+   Ensure you have PHP 8.3+ installed, then run:
+   ```bash
+   composer install --ignore-platform-reqs
+   ```
 
-```bash
-composer require laravel/boost --dev
+3. **Configure Environment Variables:**
+   Copy the example file:
+   ```bash
+   cp .env.example .env
+   ```
+   Add your MongoDB, Clerk, and Razorpay credentials to the `.env` file:
+   ```env
+   # Clerk Authentication
+   VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+   CLERK_JS_URL=...
 
-php artisan boost:install
-```
+   # Razorpay Payment Gateway (Test Mode)
+   RAZORPAY_KEY=rzp_test_...
+   RAZORPAY_SECRET=your_razorpay_secret_here
+   ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+4. **Start the Development Server:**
+   ```bash
+   php artisan serve
+   ```
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🧪 Testing the Payment Flow (Razorpay Test Mode)
 
-## Code of Conduct
+To test the payment gateway without using real money:
+1. Ensure your `.env` contains **Test Mode** Razorpay keys (`rzp_test_...`).
+2. Go to the checkout page and click **Pay Online**.
+3. In the Razorpay popup, select **Netbanking**.
+4. Choose the bank named **"Success"**.
+5. Click **Pay**. 
+6. The backend will verify the test signature and securely save the booking to MongoDB.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+For the **Manual QR Flow**:
+1. Select "Scan & Pay via UPI".
+2. Click "I Have Completed Payment".
+3. Confirm the modal prompt to save the pending booking.

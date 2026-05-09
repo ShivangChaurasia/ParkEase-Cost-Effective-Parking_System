@@ -19,7 +19,10 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'booking_email',
     'vehicle_type',
     'payment_status',
-    'is_manual'
+    'is_manual',
+    'razorpay_payment_id',
+    'razorpay_order_id',
+    'payment_method'
 ]) ]
 class Booking extends Model
 {

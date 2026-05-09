@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Razorpay\Api\Api;
+use Exception;
 
 class BookingController extends Controller
 {
@@ -57,8 +59,27 @@ class BookingController extends Controller
             'vehicle_type' => 'nullable|string',
             'email' => 'required|email',
             'customer_name' => 'nullable|string',
-            'customer_phone' => 'nullable|string'
+            'customer_phone' => 'nullable|string',
+            'payment_method' => 'required|string|in:razorpay,manual_qr',
+            'razorpay_payment_id' => 'required_if:payment_method,razorpay|string|nullable',
+            'razorpay_order_id' => 'required_if:payment_method,razorpay|string|nullable',
+            'razorpay_signature' => 'required_if:payment_method,razorpay|string|nullable'
         ]);
+
+        // Verify Razorpay Signature only if method is razorpay
+        if ($validated['payment_method'] === 'razorpay') {
+            try {
+                $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+                $attributes = array(
+                    'razorpay_order_id' => $validated['razorpay_order_id'],
+                    'razorpay_payment_id' => $validated['razorpay_payment_id'],
+                    'razorpay_signature' => $validated['razorpay_signature']
+                );
+                $api->utility->verifyPaymentSignature($attributes);
+            } catch (Exception $e) {
+                return response()->json(['message' => 'Payment verification failed: ' . $e->getMessage()], 400);
+            }
+        }
 
         $parkingLot = ParkingLot::findOrFail($validated['parking_lot_id']);
         $bookings = [];
@@ -94,8 +115,10 @@ class BookingController extends Controller
             };
 
             $userId = Auth::id();
-            if (!$userId) {
-                $existingUser = \App\Models\User::where('email', $validated['email'])->first();
+            $userEmail = $request->input('email');
+            
+            if (!$userId && $userEmail) {
+                $existingUser = \App\Models\User::where('email', $userEmail)->first();
                 if ($existingUser) {
                     $userId = $existingUser->_id;
                 }
@@ -103,18 +126,21 @@ class BookingController extends Controller
 
             $bookings[] = Booking::create([
                 'user_id' => $userId,
-                'booking_email' => $validated['email'],
+                'booking_email' => $userEmail,
                 'parking_lot_id' => $parkingLot->_id,
                 'slot_id' => $slot->_id,
                 'time_slot_id' => $validated['time_slot_id'],
                 'date' => $validated['date'],
                 'price' => $price,
                 'status' => 'confirmed',
-                'payment_status' => 'paid', // Simulate paid
+                'payment_status' => $validated['payment_method'] === 'manual_qr' ? 'pending_verification' : 'paid',
                 'booking_id' => strtoupper(Str::random(10)),
                 'customer_name' => $validated['customer_name'] ?? null,
                 'customer_phone' => $validated['customer_phone'] ?? null,
                 'vehicle_type' => $slot->vehicle_type,
+                'payment_method' => $validated['payment_method'],
+                'razorpay_payment_id' => $validated['razorpay_payment_id'] ?? null,
+                'razorpay_order_id' => $validated['razorpay_order_id'] ?? null,
             ]);
         }
 
