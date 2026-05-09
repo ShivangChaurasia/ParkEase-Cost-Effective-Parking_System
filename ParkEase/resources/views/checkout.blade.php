@@ -53,34 +53,67 @@
                             <input type="email" id="cust_email" class="form-control rounded-3" placeholder="name@example.com" value="{{ Auth::user()->email ?? '' }}">
                             <div class="form-text small">Access this booking anytime using the same email.</div>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" id="cust_phone" class="form-control rounded-3" placeholder="10-digit mobile number" required>
+                            <div class="form-text small">Required for seamless payment experience.</div>
+                        </div>
                     </div>
 
                     <!-- Payment Methods -->
                     <div class="mb-5">
                         <h5 class="fw-bold mb-3">Select Payment Method</h5>
                         <div class="d-grid gap-2">
-                            <div class="form-check card p-3 border rounded-3 cursor-pointer payment-option active">
-                                <input class="form-check-input d-none" type="radio" name="paymentMethod" id="upi" value="upi" checked>
-                                <label class="form-check-label d-flex align-items-center w-100 cursor-pointer" for="upi">
-                                    <i class="bi bi-qr-code fs-4 me-3 text-primary"></i>
+                            <!-- Razorpay Options -->
+                            <div class="form-check card p-3 border rounded-3 cursor-pointer payment-option active" data-method="razorpay">
+                                <input class="form-check-input d-none" type="radio" name="paymentMethod" id="razorpay_gateway" value="razorpay" checked>
+                                <label class="form-check-label d-flex align-items-center w-100 cursor-pointer" for="razorpay_gateway">
+                                    <i class="bi bi-credit-card fs-4 me-3 text-primary"></i>
                                     <div>
-                                        <div class="fw-bold">UPI Payment</div>
-                                        <div class="small text-muted text-nowrap">Pay using GPay, PhonePe, Paytm</div>
+                                        <div class="fw-bold">Pay Online (Instant)</div>
+                                        <div class="small text-muted text-nowrap">UPI, Cards, Net Banking</div>
                                     </div>
                                     <i class="bi bi-check-circle-fill ms-auto text-primary check-icon"></i>
                                 </label>
                             </div>
                             
-                            <div class="form-check card p-3 border rounded-3 cursor-pointer payment-option">
-                                <input class="form-check-input d-none" type="radio" name="paymentMethod" id="card" value="card">
-                                <label class="form-check-label d-flex align-items-center w-100 cursor-pointer" for="card">
-                                    <i class="bi bi-credit-card fs-4 me-3 text-success"></i>
+                            <!-- Manual QR Option -->
+                            <div class="form-check card p-3 border rounded-3 cursor-pointer payment-option" data-method="manual_qr">
+                                <input class="form-check-input d-none" type="radio" name="paymentMethod" id="manual_qr" value="manual_qr">
+                                <label class="form-check-label d-flex align-items-center w-100 cursor-pointer" for="manual_qr">
+                                    <i class="bi bi-qr-code-scan fs-4 me-3 text-success"></i>
                                     <div>
-                                        <div class="fw-bold">Credit / Debit Card</div>
-                                        <div class="small text-muted text-nowrap">Visa, Mastercard, RuPay</div>
+                                        <div class="fw-bold">Scan & Pay via UPI</div>
+                                        <div class="small text-muted text-nowrap">PhonePe, GPay, Paytm (Manual)</div>
                                     </div>
                                     <i class="bi bi-circle ms-auto text-muted check-icon"></i>
                                 </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual QR Payment Section (Hidden by default) -->
+                    <div id="qrPaymentSection" class="mb-4 d-none">
+                        <div class="card bg-light border border-success-subtle rounded-4 p-4 text-center position-relative overflow-hidden shadow-sm" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);">
+                            <h5 class="fw-bold text-success mb-2">Manual UPI Payment</h5>
+                            <p class="small text-muted mb-3">Scan this QR code using any UPI app to pay</p>
+                            
+                            <div class="bg-white p-2 d-inline-block rounded-4 shadow-sm mb-3">
+                                <img src="/images/phonepe-qr.png" alt="PhonePe QR Code" class="img-fluid rounded-3" style="width: 200px; height: 200px; object-fit: contain;">
+                            </div>
+                            
+                            <div class="d-flex justify-content-center gap-3 mb-3 text-muted">
+                                <span><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Google_Pay_Logo_%282020%29.svg/1200px-Google_Pay_Logo_%282020%29.svg.png" style="height:20px;" alt="GPay"></span>
+                                <span><img src="https://download.logo.wine/logo/PhonePe/PhonePe-Logo.wine.png" style="height:20px; object-fit: cover" alt="PhonePe"></span>
+                                <span><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Paytm_Logo_%28standalone%29.svg/1200px-Paytm_Logo_%28standalone%29.svg.png" style="height:20px;" alt="Paytm"></span>
+                            </div>
+
+                            <div class="bg-success text-white py-2 px-3 rounded-pill d-inline-block fw-bold mb-4 shadow-sm">
+                                Amount to Pay: <span id="qrAmountDisplay">₹0</span>
+                            </div>
+                            
+                            <div class="alert alert-warning small mb-4 py-2 border-0 bg-warning bg-opacity-10 text-warning-emphasis">
+                                <i class="bi bi-info-circle-fill me-1"></i> Please do not close this window until you have completed the payment on your app.
                             </div>
                         </div>
                     </div>
@@ -92,6 +125,26 @@
                     <p class="text-center mt-3 small text-muted">
                         <i class="bi bi-shield-check text-success"></i> Secure 256-bit SSL Encrypted Payment
                     </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm QR Payment Modal -->
+<div class="modal fade" id="confirmQrModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-bottom-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <i class="bi bi-question-circle text-warning mb-3" style="font-size: 3rem;"></i>
+                <h4 class="fw-bold mb-3">Confirm Payment</h4>
+                <p class="text-muted mb-4">Are you sure you have successfully completed the payment of <strong id="modalQrAmount" class="text-dark"></strong> via your UPI app?</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light border px-4 py-2" data-bs-dismiss="modal">No, Cancel</button>
+                    <button type="button" class="btn btn-success px-4 py-2" id="confirmManualBtn">Yes, I Have Paid</button>
                 </div>
             </div>
         </div>
@@ -112,8 +165,8 @@
                     </div>
                 </div>
             </div>
-            <h3 class="fw-bold text-success mb-2">Payment Successful!</h3>
-            <p class="text-muted mb-4">Your parking slots have been booked. Check your dashboard for the ticket.</p>
+            <h3 class="fw-bold text-success mb-2">Booking Reserved!</h3>
+            <p class="text-muted mb-4" id="successModalMsg">Your parking slots have been booked. Check your dashboard for the ticket.</p>
             <a href="/dashboard" class="btn btn-primary-custom w-100 py-2">Go to Dashboard</a>
         </div>
     </div>
@@ -165,6 +218,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Load data from session storage (saved from parking page)
@@ -192,6 +246,11 @@
         });
         
         document.getElementById('totalAmount').innerText = '₹' + total;
+        document.getElementById('qrAmountDisplay').innerText = '₹' + total;
+        document.getElementById('modalQrAmount').innerText = '₹' + total;
+
+        let selectedMethod = 'razorpay';
+        const payNowBtn = document.getElementById('payNowBtn');
 
         // Payment Option Toggles
         document.querySelectorAll('.payment-option').forEach(opt => {
@@ -200,20 +259,36 @@
                     o.classList.remove('active');
                     o.querySelector('.check-icon').classList.replace('bi-check-circle-fill', 'bi-circle');
                     o.querySelector('.check-icon').classList.replace('text-primary', 'text-muted');
+                    o.querySelector('.check-icon').classList.replace('text-success', 'text-muted');
                 });
                 this.classList.add('active');
+                selectedMethod = this.getAttribute('data-method');
                 this.querySelector('input').checked = true;
+                
+                const iconColor = selectedMethod === 'razorpay' ? 'text-primary' : 'text-success';
                 this.querySelector('.check-icon').classList.replace('bi-circle', 'bi-check-circle-fill');
-                this.querySelector('.check-icon').classList.replace('text-muted', 'text-primary');
+                this.querySelector('.check-icon').classList.replace('text-muted', iconColor);
+                
+                // Toggle QR Section
+                if (selectedMethod === 'manual_qr') {
+                    document.getElementById('qrPaymentSection').classList.remove('d-none');
+                    payNowBtn.innerHTML = 'I Have Completed Payment';
+                    payNowBtn.classList.replace('btn-primary-custom', 'btn-success');
+                } else {
+                    document.getElementById('qrPaymentSection').classList.add('d-none');
+                    payNowBtn.innerHTML = 'Pay & Confirm Booking';
+                    payNowBtn.classList.replace('btn-success', 'btn-primary-custom');
+                }
             });
         });
 
-        // Final Payment Action
-        document.getElementById('payNowBtn').addEventListener('click', async function() {
+        // Setup Manual QR Confirmation Modal
+        const confirmQrModal = new bootstrap.Modal(document.getElementById('confirmQrModal'));
+        document.getElementById('confirmManualBtn').addEventListener('click', async function() {
             const btn = this;
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing Payment...';
-
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            
             try {
                 const response = await fetch('/api/bookings', {
                     method: 'POST',
@@ -229,23 +304,183 @@
                         date: bookingData.date,
                         vehicle_type: bookingData.vehicle_type,
                         email: document.getElementById('cust_email').value,
-                        customer_name: document.getElementById('cust_name').value
+                        customer_name: document.getElementById('cust_name').value,
+                        customer_phone: document.getElementById('cust_phone').value,
+                        payment_method: 'manual_qr'
                     })
                 });
 
                 if (response.ok) {
+                    confirmQrModal.hide();
                     sessionStorage.removeItem('pending_booking');
+                    document.getElementById('successModalMsg').innerText = "Your payment is pending verification. Check dashboard for status.";
                     const successModal = new bootstrap.Modal(document.getElementById('successModal'));
                     successModal.show();
                 } else {
                     const err = await response.json();
-                    alert('Error: ' + err.message);
+                    alert('Error: ' + (err.message || 'Verification failed'));
                     btn.disabled = false;
-                    btn.innerHTML = 'Pay & Confirm Booking';
+                    btn.innerHTML = 'Yes, I Have Paid';
                 }
             } catch (err) {
                 console.error(err);
-                alert('Payment failed. Please try again.');
+                alert('Request failed. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = 'Yes, I Have Paid';
+            }
+        });
+
+        // Final Payment Action with Razorpay Integration
+        payNowBtn.addEventListener('click', async function() {
+            if (selectedMethod === 'manual_qr') {
+                confirmQrModal.show();
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Initializing Payment...';
+
+            try {
+                // Step 1: Create an order on the server
+                const orderResponse = await fetch('/api/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ amount: total })
+                });
+
+                const orderDataResp = await orderResponse.json();
+
+                if (!orderResponse.ok || !orderDataResp.success) {
+                    throw new Error(orderDataResp.message || 'Failed to create order');
+                }
+
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Opening Secure Gateway...';
+
+                // Step 2: Initialize Premium Razorpay Checkout
+                const options = {
+                    "key": orderDataResp.key, // The Key ID generated from the Dashboard
+                    "amount": orderDataResp.amount, // Amount is in currency subunits. Default currency is INR.
+                    "currency": orderDataResp.currency,
+                    "name": "ParkEase Premium",
+                    "description": "Secure Parking Reservation",
+                    "image": "/favicon.ico", // You can replace with your logo URL
+                    "order_id": orderDataResp.order_id, // This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+                    
+                    // Premium UI Configuration: UPI First
+                    "config": {
+                        "display": {
+                            "blocks": {
+                                "upi": {
+                                    "name": "Recommended: Pay via UPI",
+                                    "instruments": [
+                                        { "method": "upi" },
+                                        { "method": "upi", "provider": "google_pay" },
+                                        { "method": "upi", "provider": "phonepe" },
+                                        { "method": "upi", "provider": "paytm" }
+                                    ]
+                                },
+                                "other": {
+                                    "name": "Other Payment Modes",
+                                    "instruments": [
+                                        { "method": "card" },
+                                        { "method": "netbanking" },
+                                        { "method": "wallet" }
+                                    ]
+                                }
+                            },
+                            "hide": [
+                                { "method": "emi" },
+                                { "method": "paylater" }
+                            ],
+                            "sequence": ["block.upi", "block.other"],
+                            "preferences": {
+                                "show_default_blocks": false
+                            }
+                        }
+                    },
+                    "retry": {
+                        "enabled": false // Let us handle failure gracefully
+                    },
+                    "handler": async function (response){
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Confirming Booking...';
+                        
+                        // Step 3: Verify signature and create booking on server
+                        try {
+                            const verifyResponse = await fetch('/api/bookings', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    parking_lot_id: bookingData.lot_id,
+                                    slot_ids: slots.map(s => s.id),
+                                    time_slot_id: bookingData.time_slot_id,
+                                    date: bookingData.date,
+                                    vehicle_type: bookingData.vehicle_type,
+                                    email: document.getElementById('cust_email').value,
+                                    customer_name: document.getElementById('cust_name').value,
+                                    customer_phone: document.getElementById('cust_phone').value,
+                                    payment_method: 'razorpay',
+                                    // Razorpay details
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature
+                                })
+                            });
+
+                            if (verifyResponse.ok) {
+                                sessionStorage.removeItem('pending_booking');
+                                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                                successModal.show();
+                            } else {
+                                const err = await verifyResponse.json();
+                                alert('Error confirming booking: ' + (err.message || 'Verification failed'));
+                                btn.disabled = false;
+                                btn.innerHTML = 'Pay & Confirm Booking';
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert('Failed to communicate with server. Contact support if amount was deducted.');
+                            btn.disabled = false;
+                            btn.innerHTML = 'Pay & Confirm Booking';
+                        }
+                    },
+                    "prefill": {
+                        "name": document.getElementById('cust_name').value,
+                        "email": document.getElementById('cust_email').value,
+                        "contact": document.getElementById('cust_phone').value || ""
+                    },
+                    "theme": {
+                        "color": "#000000" // Premium Dark Mode feel for gateway
+                    },
+                    "modal": {
+                        "ondismiss": function(){
+                            btn.disabled = false;
+                            btn.innerHTML = 'Pay & Confirm Booking';
+                        },
+                        "animation": true,
+                        "backdropclose": false
+                    }
+                };
+                
+                const rzp1 = new Razorpay(options);
+                rzp1.on('payment.failed', function (response){
+                    alert("Payment Failed: " + response.error.description);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Pay & Confirm Booking';
+                });
+                rzp1.open();
+
+            } catch (err) {
+                console.error(err);
+                alert(err.message || 'Payment initialization failed. Please try again.');
                 btn.disabled = false;
                 btn.innerHTML = 'Pay & Confirm Booking';
             }

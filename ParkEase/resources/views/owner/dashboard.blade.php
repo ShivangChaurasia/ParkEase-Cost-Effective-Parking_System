@@ -81,7 +81,12 @@
                         </div>
                         
                         <div class="col-md-12 mt-4">
-                            <label class="form-label fw-bold">Location (Click map to pin)</label>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">Location (Click map to pin)</label>
+                                <button type="button" class="btn btn-sm btn-outline-dark" id="detectLocationBtn">
+                                    <i class="bi bi-geo-alt-fill"></i> Detect My Location
+                                </button>
+                            </div>
                             <div id="ownerMap" style="height: 300px; border-radius: 8px; border: 1px solid var(--border-color);"></div>
                             <input type="hidden" name="latitude" id="latInput" required>
                             <input type="hidden" name="longitude" id="lngInput" required>
@@ -189,6 +194,49 @@
                 map.setView([position.coords.latitude, position.coords.longitude], 12);
             });
         }
+
+        // Detect Location Button
+        document.getElementById('detectLocationBtn').addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Detecting...';
+            btn.disabled = true;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    const latlng = [lat, lng];
+                    map.setView(latlng, 15);
+                    
+                    document.getElementById('latInput').value = lat;
+                    document.getElementById('lngInput').value = lng;
+                    document.getElementById('latDisplay').innerText = lat.toFixed(6);
+                    document.getElementById('lngDisplay').innerText = lng.toFixed(6);
+
+                    if (marker) {
+                        marker.setLatLng(latlng);
+                    } else {
+                        marker = L.marker(latlng).addTo(map);
+                    }
+                    
+                    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Found!';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 3000);
+                }, function(error) {
+                    alert('Error detecting location. Please ensure location services are enabled in your browser.');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            } else {
+                alert('Geolocation is not supported by your browser.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
 
         map.on('click', function(e) {
             const lat = e.latlng.lat;
