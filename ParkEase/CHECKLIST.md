@@ -14,6 +14,7 @@ This document tracks the progress of the ParkEase project. Co-developers should 
 - [x] Optimized Slot Fetching & Dashboard queries to prevent timeouts and reduce payload size.
 - [x] Implemented Guest Booking persistence with email-to-account synchronization logic.
 - [x] **New**: Fixed syntax error in `Booking.php` model that caused API 500 errors.
+- [x] **Gateway Integration**: Connected Razorpay for real-world transaction processing (UPI-First layout).
 
 ### Frontend & UI
 - [x] Integrated Clerk Authentication Vanilla JS SDK for secure login and registration.
@@ -32,7 +33,8 @@ This document tracks the progress of the ParkEase project. Co-developers should 
 ## 🚧 What to Work on Next (Pending Tasks)
 
 ### Phase 6: Payment Integration (High Priority)
-- [ ] **Gateway Integration**: Connect Stripe or Razorpay for real-world transaction processing.
+
+- [x] **Manual QR Fallback**: Implemented "Scan & Pay via UPI" option for hackathon demo mode.
 - [ ] **Webhooks**: Implement background listeners for secure payment status confirmation.
 - [ ] **PDF Invoicing**: Generate and email professional receipts/tickets after booking.
 - [ ] **Wallet System**: Implement a user wallet for one-click parking payments.
