@@ -16,6 +16,7 @@ Route::get('/search', function () {
     return view('search');
 });
 
+
 Route::get('/parking/{id}', function ($id) {
     $lot = \App\Models\ParkingLot::findOrFail($id);
     return view('parking', ['id' => $id, 'lot' => $lot]);
