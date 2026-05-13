@@ -76,9 +76,11 @@
                                     <i class="bi bi-check-circle-fill ms-auto text-primary check-icon"></i>
                                 </label>
                             </div>
-                            
+
                         </div>
                     </div>
+
+
 
                     <button id="payNowBtn" class="btn btn-primary-custom w-100 py-3 fs-5 shadow">
                         Pay & Confirm Booking
@@ -190,7 +192,10 @@
         
         document.getElementById('totalAmount').innerText = '₹' + total;
 
+        let selectedMethod = 'razorpay';
         const payNowBtn = document.getElementById('payNowBtn');
+
+
 
         // Final Payment Action with Razorpay Integration
         payNowBtn.addEventListener('click', async function() {
