@@ -70,4 +70,9 @@ Route::middleware(['auth', 'onboarded'])->group(function () {
     // Invoice routes
     Route::get('/invoice/{id}/download', [\App\Http\Controllers\InvoiceController::class, 'download'])->name('invoice.download');
     Route::get('/invoice/{id}/view', [\App\Http\Controllers\InvoiceController::class, 'view'])->name('invoice.view');
+
+    // Reservation Management
+    Route::get('/settings', [DashboardController::class, 'settings']);
+    Route::post('/api/bookings/{id}/cancel', [BookingController::class, 'cancelBooking']);
+    Route::post('/api/bookings/{id}/extend', [BookingController::class, 'extendBooking']);
 });

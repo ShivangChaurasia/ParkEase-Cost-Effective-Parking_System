@@ -171,4 +171,51 @@ class BookingController extends Controller
             'bookings' => $bookings
         ], 201);
     }
+
+    public function cancelBooking(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+        
+        if ($booking->status === 'cancelled') {
+            return response()->json(['message' => 'Booking is already cancelled.'], 400);
+        }
+
+        // Calculate refund
+        // Assume time_slot_id is "HH:mm-HH:mm"
+        $startTimeStr = explode('-', $booking->time_slot_id)[0];
+        $bookingStart = \Carbon\Carbon::parse($booking->date . ' ' . $startTimeStr);
+        $now = now();
+        
+        $hoursDiff = $now->diffInHours($bookingStart, false);
+        $minsDiff = $now->diffInMinutes($bookingStart, false);
+
+        $refundPercentage = 0;
+        if ($minsDiff >= 120) {
+            $refundPercentage = 100;
+        } elseif ($minsDiff >= 30) {
+            $refundPercentage = 50;
+        } else {
+            $refundPercentage = 0;
+        }
+
+        $refundAmount = ($booking->price * $refundPercentage) / 100;
+
+        $booking->status = 'cancelled';
+        $booking->refund_amount = $refundAmount;
+        $booking->refund_status = $refundAmount > 0 ? 'processing' : 'none';
+        $booking->cancelled_at = now();
+        $booking->save();
+
+        return response()->json([
+            'message' => 'Booking cancelled successfully',
+            'refund_amount' => $refundAmount,
+            'refund_percentage' => $refundPercentage
+        ]);
+    }
+
+    public function extendBooking(Request $request, $id)
+    {
+        // Placeholder for future enhancement
+        return response()->json(['message' => 'Extension logic coming soon.'], 501);
+    }
 }
