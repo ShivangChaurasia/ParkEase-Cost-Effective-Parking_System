@@ -179,7 +179,7 @@
             </div>
             
             <div class="col-lg-6 app-preview-container text-center">
-                <img src="/premium_parking_app_hero_1778667074885.png" alt="ParkEase App" class="app-preview-image">
+                <img src="/images/hero.png" alt="ParkEase App" class="app-preview-image">
                 <div class="position-absolute" style="top: 20%; right: 0; width: 150px; height: 150px; background: rgba(0,0,0,0.05); border-radius: 50%; filter: blur(60px); z-index: -1;"></div>
             </div>
         </div>
