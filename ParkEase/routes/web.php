@@ -65,4 +65,8 @@ Route::middleware(['auth', 'onboarded'])->group(function () {
     Route::post('/api/create-order', [\App\Http\Controllers\PaymentController::class, 'createOrder']);
     
     Route::post('/api/bookings', [BookingController::class, 'createBooking']);
+
+    // Invoice routes
+    Route::get('/invoice/{id}/download', [\App\Http\Controllers\InvoiceController::class, 'download'])->name('invoice.download');
+    Route::get('/invoice/{id}/view', [\App\Http\Controllers\InvoiceController::class, 'view'])->name('invoice.view');
 });

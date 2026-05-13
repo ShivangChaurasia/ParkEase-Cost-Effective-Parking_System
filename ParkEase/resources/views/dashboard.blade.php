@@ -75,9 +75,15 @@
                                 <a href="https://www.google.com/maps/dir/?api=1&destination={{ $booking->parkingLot->latitude ?? '' }},{{ $booking->parkingLot->longitude ?? '' }}" target="_blank" class="btn btn-dark flex-grow-1 py-2 rounded-3">
                                     <i class="bi bi-navigation me-1"></i> Navigate
                                 </a>
-                                <button class="btn btn-outline-secondary rounded-3" title="View Ticket">
-                                    <i class="bi bi-ticket-perforated"></i>
-                                </button>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary rounded-3 dropdown-toggle h-100 px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Invoice Options">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                        <li><a class="dropdown-item py-2" href="{{ route('invoice.view', $booking->_id) }}" target="_blank"><i class="bi bi-eye me-2 text-primary"></i>View Ticket</a></li>
+                                        <li><a class="dropdown-item py-2" href="{{ route('invoice.download', $booking->_id) }}"><i class="bi bi-download me-2 text-success"></i>Download PDF</a></li>
+                                    </ul>
+                                </div>
                             </div>
                             
                             <div class="mt-3 text-center d-flex justify-content-between align-items-center">

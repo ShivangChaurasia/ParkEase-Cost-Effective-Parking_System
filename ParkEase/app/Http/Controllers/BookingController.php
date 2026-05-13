@@ -124,7 +124,7 @@ class BookingController extends Controller
                 }
             }
 
-            $bookings[] = Booking::create([
+            $booking = Booking::create([
                 'user_id' => $userId,
                 'booking_email' => $userEmail,
                 'parking_lot_id' => $parkingLot->_id,
@@ -142,6 +142,11 @@ class BookingController extends Controller
                 'razorpay_payment_id' => $validated['razorpay_payment_id'] ?? null,
                 'razorpay_order_id' => $validated['razorpay_order_id'] ?? null,
             ]);
+
+            // Automatically generate the PDF invoice/ticket
+            \App\Http\Controllers\InvoiceController::generateInvoice($booking);
+
+            $bookings[] = $booking;
         }
 
         return response()->json([
