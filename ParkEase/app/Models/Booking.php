@@ -22,7 +22,10 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'is_manual',
     'razorpay_payment_id',
     'razorpay_order_id',
-    'payment_method'
+    'payment_method',
+    'invoice_path',
+    'invoice_number',
+    'generated_at'
 ]) ]
 class Booking extends Model
 {
@@ -46,5 +49,9 @@ class Booking extends Model
     public function timeSlot()
     {
         return $this->belongsTo(TimeSlot::class, 'time_slot_id');
+    }
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'booking_id');
     }
 }

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Razorpay\Api\Api;
+use App\Models\Transaction;
 use Exception;
 
 class BookingController extends Controller
@@ -124,7 +125,7 @@ class BookingController extends Controller
                 }
             }
 
-            $bookings[] = Booking::create([
+            $booking = Booking::create([
                 'user_id' => $userId,
                 'booking_email' => $userEmail,
                 'parking_lot_id' => $parkingLot->_id,
@@ -142,6 +143,27 @@ class BookingController extends Controller
                 'razorpay_payment_id' => $validated['razorpay_payment_id'] ?? null,
                 'razorpay_order_id' => $validated['razorpay_order_id'] ?? null,
             ]);
+
+            // Automatically generate the PDF invoice/ticket
+            \App\Http\Controllers\InvoiceController::generateInvoice($booking);
+
+            // Create Transaction Record
+            Transaction::create([
+                'user_id' => $userId,
+                'owner_id' => $parkingLot->owner_id,
+                'booking_id' => $booking->_id,
+                'amount' => $price,
+                'type' => 'earning',
+                'status' => $validated['payment_method'] === 'manual_qr' ? 'pending' : 'completed',
+                'payment_method' => $validated['payment_method'],
+                'description' => "Booking for slot {$slot->slot_number} at {$parkingLot->name}",
+                'metadata' => [
+                    'date' => $validated['date'],
+                    'time_slot' => $validated['time_slot_id']
+                ]
+            ]);
+
+            $bookings[] = $booking;
         }
 
         return response()->json([
