@@ -50,4 +50,8 @@ class Booking extends Model
     {
         return $this->belongsTo(TimeSlot::class, 'time_slot_id');
     }
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'booking_id');
+    }
 }
