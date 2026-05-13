@@ -35,7 +35,7 @@ This document tracks the progress of the ParkEase project. Co-developers should 
 ## 🚧 What to Work on Next (Pending Tasks)
 
 ### Phase 6: Payment Integration (High Priority)
-- [ ] **PDF Invoicing**: Generate and email professional receipts/tickets after booking.
+- [x] **PDF Invoicing**: Generate and email professional receipts/tickets after booking.
 - [ ] **Wallet System**: Implement a user wallet for one-click parking payments.
 
 ### Phase 7: Advanced "Fancy" Features

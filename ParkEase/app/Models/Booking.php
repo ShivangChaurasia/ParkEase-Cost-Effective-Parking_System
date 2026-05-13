@@ -25,7 +25,10 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'payment_method',
     'invoice_path',
     'invoice_number',
-    'generated_at'
+    'generated_at',
+    'refund_amount',
+    'refund_status',
+    'cancelled_at'
 ]) ]
 class Booking extends Model
 {

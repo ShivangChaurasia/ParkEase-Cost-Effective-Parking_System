@@ -176,6 +176,12 @@ class BookingController extends Controller
     {
         $booking = Booking::findOrFail($id);
         
+        // Security Check: Only the owner of the booking can cancel it
+        $user = Auth::user();
+        if ($booking->user_id !== $user->_id && $booking->booking_email !== $user->email) {
+            return response()->json(['message' => 'Unauthorized. This is not your booking.'], 403);
+        }
+
         if ($booking->status === 'cancelled') {
             return response()->json(['message' => 'Booking is already cancelled.'], 400);
         }
@@ -205,6 +211,24 @@ class BookingController extends Controller
         $booking->refund_status = $refundAmount > 0 ? 'processing' : 'none';
         $booking->cancelled_at = now();
         $booking->save();
+
+        // Create Transaction Record for Refund
+        if ($refundAmount > 0) {
+            Transaction::create([
+                'user_id' => $user->_id,
+                'owner_id' => $booking->parkingLot->owner_id ?? null,
+                'booking_id' => $booking->_id,
+                'amount' => $refundAmount,
+                'type' => 'refund',
+                'status' => 'completed',
+                'payment_method' => $booking->payment_method ?? 'original',
+                'description' => "Refund for cancelled booking {$booking->booking_id}",
+                'metadata' => [
+                    'original_amount' => $booking->price,
+                    'refund_percentage' => $refundPercentage
+                ]
+            ]);
+        }
 
         return response()->json([
             'message' => 'Booking cancelled successfully',
