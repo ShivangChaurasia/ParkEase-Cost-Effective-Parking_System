@@ -257,12 +257,20 @@
                     }
                 @endauth
                 
-                const userButtonDiv = document.createElement('div');
-                authContainer.appendChild(userButtonDiv);
-                Clerk.mountUserButton(userButtonDiv, {
-                    afterSignOutUrl: '/',
-                    signInUrl: '/login'
-                });
+                const profileLink = document.createElement('a');
+                profileLink.href = "/settings";
+                profileLink.className = "d-flex align-items-center text-decoration-none ms-2";
+                profileLink.title = "Account Settings";
+                
+                const avatar = document.createElement('img');
+                avatar.src = Clerk.user.imageUrl;
+                avatar.className = "rounded-circle border border-2 border-light shadow-sm";
+                avatar.style.width = "40px";
+                avatar.style.height = "40px";
+                avatar.style.objectFit = "cover";
+                
+                profileLink.appendChild(avatar);
+                authContainer.appendChild(profileLink);
 
                 // Sync with Laravel Backend
                 if (!sessionStorage.getItem('clerk_synced')) {
