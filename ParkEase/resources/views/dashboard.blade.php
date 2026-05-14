@@ -1,115 +1,121 @@
 @extends('layouts.app')
 
-@section('title', 'My Reservations & Activity')
+@section('title', 'Intelligent Dashboard')
 
 @push('styles')
 <style>
-    :root {
-        --active-color: #0d6efd;
-        --upcoming-color: #198754;
-        --completed-color: #6c757d;
-        --cancelled-color: #dc3545;
-        --glass-card: rgba(255, 255, 255, 0.85);
+    .dashboard-hero {
+        padding: var(--space-12) 0 var(--space-20);
+        background: radial-gradient(circle at 10% 20%, rgba(46, 196, 182, 0.03) 0%, transparent 50%);
+        border-bottom: 1px solid var(--border-default);
     }
 
-    body {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        min-height: 100vh;
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: var(--space-5);
+        margin-top: calc(var(--space-16) * -1);
     }
 
-    .dashboard-header {
-        padding: 40px 0;
-        background: #000;
-        color: white;
-        border-radius: 0 0 40px 40px;
-        margin-bottom: -40px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    .search-input-wrapper {
+        position: relative;
+        max-width: 360px;
+        width: 100%;
     }
 
-    .nav-tabs-custom {
-        border: none;
-        background: rgba(255, 255, 255, 0.5);
-        padding: 8px;
-        border-radius: 20px;
-        display: inline-flex;
-        backdrop-filter: blur(10px);
-        flex-wrap: wrap;
+    .search-input-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
     }
 
-    .nav-tabs-custom .nav-link {
-        border: none;
-        border-radius: 15px;
-        padding: 10px 20px;
+    .table-container {
+        background: var(--bg-surface);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border-default);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .table th {
+        background: var(--bg-elevated);
+        padding: var(--space-4) var(--space-6);
+        font-size: 0.75rem;
         font-weight: 700;
-        color: #495057;
-        transition: all 0.3s;
-    }
-
-    .nav-tabs-custom .nav-link.active {
-        background: #000;
-        color: #fff;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-
-    .search-bar {
-        border-radius: 15px;
-        border: 1px solid rgba(0,0,0,0.1);
-        padding: 12px 20px;
-        background: white;
-        transition: all 0.3s;
-    }
-
-    /* Modal Styling */
-    .modal-content-glass {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 32px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .status-badge-animated {
-        font-size: 0.7rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: 800;
-        padding: 6px 12px;
-        border-radius: 50px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-default);
     }
 
-    .status-active { background: rgba(13, 110, 253, 0.1); color: #0d6efd; border: 1px solid rgba(13, 110, 253, 0.2); }
-    .status-upcoming { background: rgba(25, 135, 84, 0.1); color: #198754; border: 1px solid rgba(25, 135, 84, 0.2); }
-    .status-completed { background: rgba(108, 117, 125, 0.1); color: #6c757d; border: 1px solid rgba(108, 117, 125, 0.2); }
-    .status-cancelled { background: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2); }
-
-    .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(0.95); opacity: 1; } }
+    .table td {
+        padding: var(--space-5) var(--space-6);
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="dashboard-header">
-    <div class="container text-center">
-        <h1 class="fw-bold display-5 mb-2">My Activity</h1>
-        <p class="opacity-75">Manage your bookings and track your spending</p>
+<div class="dashboard-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="text-h1 mb-2" id="smartGreeting">Good Evening, {{ explode(' ', auth()->user()->name)[0] }} 👋</h1>
+                <p class="text-lead mb-0">
+                    @if($stats['active_sessions'] > 0)
+                        Monitoring <span class="text-gradient fw-bold">{{ $stats['active_sessions'] }} active</span> urban mobility session{{ $stats['active_sessions'] > 1 ? 's' : '' }}.
+                    @else
+                        No active parking sessions detected.
+                    @endif
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                <a href="/search" class="btn btn-brand">
+                    <i class="bi bi-geo-alt"></i> Find New Spot
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="container py-5">
-    <!-- Search & Tabs -->
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center mb-5 gap-4">
-        <ul class="nav nav-tabs nav-tabs-custom" id="bookingTabs" role="tablist">
-            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#active-pane">Active</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#upcoming-pane">Upcoming</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#past-pane">Past</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cancelled-pane">Cancelled</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#transactions-pane"><i class="bi bi-credit-card me-1"></i> Transactions</button></li>
-        </ul>
+<div class="container pb-5">
+    <!-- Stats Overlay -->
+    <div class="stat-grid">
+        <div class="surface-card p-4 hover-lift">
+            <div class="text-h2 text-primary mb-1">{{ $stats['active_sessions'] }}</div>
+            <div class="text-h6">Active Hubs</div>
+        </div>
+        <div class="surface-card p-4 hover-lift">
+            <div class="text-h2 text-primary mb-1">{{ $stats['total_bookings'] }}</div>
+            <div class="text-h6">Lifetime Bookings</div>
+        </div>
+        <div class="surface-card p-4 hover-lift">
+            <div class="text-h2 text-primary mb-1">₹{{ number_format($stats['total_spent']) }}</div>
+            <div class="text-h6">Net Investment</div>
+        </div>
+        <div class="surface-card p-4 hover-lift">
+            <div class="text-h2 text-primary mb-1">₹{{ number_format($stats['total_refunds']) }}</div>
+            <div class="text-h6">Total Savings</div>
+        </div>
+    </div>
 
-        <div class="d-flex gap-2 w-100" style="max-width: 400px;">
-            <input type="text" class="form-control search-bar w-100" placeholder="Search bookings or activity..." id="bookingSearch">
+    <!-- Controls -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center mt-5 mb-5 gap-4">
+        <div class="nav nav-pills-premium" id="bookingTabs" role="tablist">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#active-pane">Active</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#upcoming-pane">Upcoming</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#past-pane">History</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#cancelled-pane">Cancelled</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transactions-pane"><i class="bi bi-ledger me-1"></i> Ledger</button>
+        </div>
+
+        <div class="search-input-wrapper">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control-premium ps-5" placeholder="Search sessions or IDs..." id="bookingSearch">
         </div>
     </div>
 
@@ -123,7 +129,12 @@
                     @endforeach
                 </div>
             @else
-                <div class="text-center py-5"><h5 class="fw-bold">No Active Bookings</h5><p class="text-muted">You have no parking sessions running currently.</p></div>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-car-front"></i></div>
+                    <h3 class="text-h3 mb-2">System Idle</h3>
+                    <p class="text-secondary mb-4">No active parking sessions in progress.</p>
+                    <a href="/search" class="btn btn-secondary">Find Parking Nearby</a>
+                </div>
             @endif
         </div>
 
@@ -136,7 +147,12 @@
                     @endforeach
                 </div>
             @else
-                <div class="text-center py-5"><h5 class="fw-bold">No Upcoming Bookings</h5><p class="text-muted">Plan your next trip and book a spot ahead of time.</p></div>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-calendar4-week"></i></div>
+                    <h3 class="text-h3 mb-2">No Pending Arrivals</h3>
+                    <p class="text-secondary mb-4">Reserve a spot for your next destination ahead of time.</p>
+                    <a href="/search" class="btn btn-secondary">Plan a Trip</a>
+                </div>
             @endif
         </div>
 
@@ -149,7 +165,11 @@
                     @endforeach
                 </div>
             @else
-                <div class="text-center py-5"><h5 class="fw-bold">No Past Bookings</h5></div>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-clock-history"></i></div>
+                    <h3 class="text-h3 mb-2">No History Recorded</h3>
+                    <p class="text-secondary">Your completed parking sessions will appear here.</p>
+                </div>
             @endif
         </div>
 
@@ -162,41 +182,54 @@
                     @endforeach
                 </div>
             @else
-                <div class="text-center py-5"><h5 class="fw-bold">No Cancelled Bookings</h5></div>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-x-circle"></i></div>
+                    <h3 class="text-h3 mb-2">Clean Slate</h3>
+                    <p class="text-secondary">You haven't cancelled any bookings.</p>
+                </div>
             @endif
         </div>
 
         <!-- Transactions Tab -->
         <div class="tab-pane fade" id="transactions-pane">
             @if(count($transactions) > 0)
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-container">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="bg-dark text-white">
+                        <table class="table table-borderless mb-0">
+                            <thead>
                                 <tr>
-                                    <th class="px-4 py-3">Date</th>
-                                    <th class="py-3">Description</th>
-                                    <th class="py-3">Method</th>
-                                    <th class="py-3">Amount</th>
-                                    <th class="py-3">Status</th>
+                                    <th>Timestamp</th>
+                                    <th>Service Description</th>
+                                    <th>Reference</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($transactions as $tx)
                                     <tr>
-                                        <td class="px-4 py-3 text-muted small">{{ $tx->created_at->format('M d, Y H:i') }}</td>
-                                        <td class="py-3">
-                                            <div class="fw-bold">{{ $tx->description }}</div>
-                                            <div class="text-muted small">ID: {{ substr($tx->_id, -8) }}</div>
+                                        <td>
+                                            <div class="text-h5 mb-1">{{ $tx->created_at->format('M d, Y') }}</div>
+                                            <div class="text-small">{{ $tx->created_at->format('h:i A') }}</div>
                                         </td>
-                                        <td class="py-3"><span class="badge bg-light text-dark border">{{ strtoupper($tx->payment_method) }}</span></td>
-                                        <td class="py-3 fw-bold {{ $tx->type === 'refund' ? 'text-primary' : 'text-danger' }}">
+                                        <td>
+                                            <div class="text-h5 mb-1">{{ $tx->description }}</div>
+                                            <div class="text-small text-uppercase fw-bold"><i class="bi bi-credit-card me-1"></i>{{ $tx->payment_method }}</div>
+                                        </td>
+                                        <td class="text-muted font-monospace text-small">
+                                            {{ substr($tx->_id, -12) }}
+                                        </td>
+                                        <td class="fw-bold fs-5 {{ $tx->type === 'refund' ? 'text-success' : '' }}">
                                             {{ $tx->type === 'refund' ? '+' : '-' }}₹{{ $tx->amount }}
                                         </td>
-                                        <td class="py-3">
-                                            <span class="badge {{ $tx->status === 'completed' ? 'bg-success' : ($tx->status === 'pending' ? 'bg-warning' : 'bg-danger') }}">
-                                                {{ ucfirst($tx->status) }}
-                                            </span>
+                                        <td>
+                                            @if($tx->status === 'completed')
+                                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 border border-success border-opacity-25 rounded-pill">Success</span>
+                                            @elseif($tx->status === 'pending')
+                                                <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 border border-warning border-opacity-25 rounded-pill">Processing</span>
+                                            @else
+                                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 border border-danger border-opacity-25 rounded-pill">Rejected</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
@@ -205,7 +238,11 @@
                     </div>
                 </div>
             @else
-                <div class="text-center py-5"><h5 class="fw-bold">No Transactions Found</h5></div>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-receipt"></i></div>
+                    <h3 class="text-h3 mb-2">Ledger Empty</h3>
+                    <p class="text-secondary">Your transaction history will be recorded here.</p>
+                </div>
             @endif
         </div>
     </div>
@@ -214,39 +251,115 @@
 <!-- Cancellation Modal -->
 <div class="modal fade" id="cancelModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modal-content-glass shadow-lg">
-            <div class="modal-body p-5">
-                <div class="text-center mb-4">
-                    <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex p-3 mb-3"><i class="bi bi-exclamation-triangle fs-2"></i></div>
-                    <h3 class="fw-bold">Confirm Cancellation</h3>
-                    <p class="text-muted">Are you sure you want to cancel this booking?</p>
+        <div class="modal-content surface-glass border-0">
+            <div class="modal-body p-5 text-center">
+                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex p-4 mb-4">
+                    <i class="bi bi-exclamation-triangle fs-1"></i>
                 </div>
-                <div class="card bg-light border-0 rounded-4 p-4 mb-4">
-                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Parking:</span><span class="fw-bold" id="cancelModalParking"></span></div>
-                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Slot:</span><span class="fw-bold" id="cancelModalSlot"></span></div>
-                    <hr class="my-3 opacity-10">
-                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Paid Amount:</span><span class="fw-bold" id="cancelModalPaid"></span></div>
-                    <div class="d-flex justify-content-between text-success fw-bold"><span>Refund Amount:</span><span id="cancelModalRefund"></span></div>
+                <h3 class="text-h3 mb-3">Cancel Session?</h3>
+                <p class="text-secondary mb-4">Are you sure you want to terminate this reservation? This process is irreversible.</p>
+                
+                <div class="surface-card text-start mb-4 p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-h6">LOCATION</span>
+                        <span class="fw-bold" id="cancelModalParking"></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-h6">SLOT</span>
+                        <span class="fw-bold" id="cancelModalSlot"></span>
+                    </div>
+                    <hr class="my-3 border-subtle">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-success text-h6"><i class="bi bi-arrow-return-left me-1"></i>ESTIMATED REFUND</span>
+                        <span class="fw-bold text-success fs-5" id="cancelModalRefund"></span>
+                    </div>
                 </div>
+                
                 <div class="d-flex gap-3">
-                    <button class="btn btn-light flex-grow-1 py-3 rounded-4 fw-bold" data-bs-dismiss="modal">Keep Booking</button>
-                    <button class="btn btn-danger flex-grow-1 py-3 rounded-4 fw-bold shadow-sm" id="confirmCancelBtn">Confirm & Cancel</button>
+                    <button class="btn btn-secondary flex-grow-1" data-bs-dismiss="modal">Back</button>
+                    <button class="btn btn-danger flex-grow-1" id="confirmCancelBtn">Confirm</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- QR Code Modal -->
-<div class="modal fade" id="qrModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content modal-content-glass">
-            <div class="modal-body text-center p-5">
-                <h5 class="fw-bold mb-4">Entry QR Code</h5>
-                <div class="bg-white p-3 rounded-4 shadow-sm mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16"><path d="M2 2h2v2H2V2Z"/><path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/><path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/><path d="M10 0v6h6V0h-6Zm5 1v4h4V1h-4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2ZM10 10v6h6v-6h-6Zm1 1h4v4h-4v-4Zm-4-4v2h1v-1h1v1h1V7H7Zm1 10h-1v-1h2v-1h1v3h-1v-1h-1v1ZM8 10h1v1H8v-1Zm1 1v2H8v-1H7v1h1v-2h1Z"/></svg>
+<!-- Ticket Modal -->
+<div class="modal fade" id="ticketModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content surface-glass border-0 overflow-hidden">
+            <div class="modal-body p-0">
+                <div class="p-4" style="background: var(--bg-surface); border-bottom: 1px solid var(--border-default); text-align: center;">
+                    <h5 class="text-h5 mb-1">E-TICKET</h5>
+                    <div class="text-small text-muted" id="ticketId"></div>
                 </div>
-                <button class="btn btn-dark w-100 mt-4 rounded-4" data-bs-dismiss="modal">Close</button>
+                <div class="p-5 text-center">
+                    <div class="bg-white p-3 d-inline-block rounded-3 mb-4 shadow-sm border">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" fill="#0E5E6F" class="bi bi-qr-code" viewBox="0 0 16 16"><path d="M2 2h2v2H2V2Z"/><path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/><path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/><path d="M10 0v6h6V0h-6Zm5 1v4h4V1h-4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2ZM10 10v6h6v-6h-6Zm1 1h4v4h-4v-4Zm-4-4v2h1v-1h1v1h1V7H7Zm1 10h-1v-1h2v-1h1v3h-1v-1h-1v1ZM8 10h1v1H8v-1Zm1 1v2H8v-1H7v1h1v-2h1Z"/></svg>
+                    </div>
+                    <h4 class="text-h4 mb-1" id="ticketParking"></h4>
+                    <p class="text-secondary" id="ticketTime"></p>
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <div class="surface-card py-3 px-4 flex-grow-1 border-0" style="background: var(--bg-hover);">
+                            <div class="text-h6">SLOT</div>
+                            <div class="text-h3" id="ticketSlot"></div>
+                        </div>
+                        <div class="surface-card py-3 px-4 flex-grow-1 border-0" style="background: var(--bg-hover);">
+                            <div class="text-h6">VEHICLE</div>
+                            <div class="text-h3" id="ticketVehicle"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 border-top text-center" style="background: var(--bg-surface); border-color: var(--border-default) !important;">
+                    <button class="btn btn-secondary w-100" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Extension Modal -->
+<div class="modal fade" id="extendModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content surface-glass border-0">
+            <div class="modal-body p-5">
+                <div class="text-center mb-4">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-4 mb-4">
+                        <i class="bi bi-clock-history fs-1"></i>
+                    </div>
+                    <h3 class="text-h3 mb-2">Extend Session</h3>
+                    <p class="text-secondary" id="extendModalInfo"></p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-h6 mb-3">ADDITIONAL DURATION</label>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <input type="radio" class="btn-check" name="extendMins" id="ext15" value="15">
+                            <label class="btn btn-outline-premium w-100 py-3" for="ext15">15m</label>
+                        </div>
+                        <div class="col-4">
+                            <input type="radio" class="btn-check" name="extendMins" id="ext30" value="30" checked>
+                            <label class="btn btn-outline-premium w-100 py-3" for="ext30">30m</label>
+                        </div>
+                        <div class="col-4">
+                            <input type="radio" class="btn-check" name="extendMins" id="ext60" value="60">
+                            <label class="btn btn-outline-premium w-100 py-3" for="ext60">60m</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="surface-card p-4 mb-4" style="background: var(--bg-hover);">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-h6">ESTIMATED COST</span>
+                        <span class="fw-bold text-primary" id="extendCostPreview">₹0</span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <button class="btn btn-secondary flex-grow-1" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-brand flex-grow-1" id="confirmExtendBtn">Confirm & Pay</button>
+                </div>
             </div>
         </div>
     </div>
@@ -255,31 +368,94 @@
 
 @push('scripts')
 <script>
+    const hour = new Date().getHours();
+    let greeting = "Good Evening";
+    if (hour < 12) greeting = "Good Morning";
+    else if (hour < 17) greeting = "Good Afternoon";
+    const greetingEl = document.getElementById('smartGreeting');
+    if(greetingEl) greetingEl.innerHTML = `${greeting}, {{ explode(' ', auth()->user()->name)[0] }} 👋`;
+
     let activeCancelId = null;
     function openCancelModal(id, parking, slot, paid, refund) {
         activeCancelId = id;
         document.getElementById('cancelModalParking').innerText = parking;
         document.getElementById('cancelModalSlot').innerText = slot;
-        document.getElementById('cancelModalPaid').innerText = '₹' + paid;
         document.getElementById('cancelModalRefund').innerText = '₹' + refund;
         new bootstrap.Modal(document.getElementById('cancelModal')).show();
     }
 
     document.getElementById('confirmCancelBtn').addEventListener('click', async function() {
-        const btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>';
+        const btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...';
         try {
-            const res = await fetch(`/api/bookings/${activeCancelId}/cancel`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }});
-            if (res.ok) window.location.reload(); else alert('Failed.');
-        } catch (err) { alert('Error.'); } finally { btn.disabled = false; }
+            const res = await fetch(`/api/bookings/${activeCancelId}/cancel`, { 
+                method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+            });
+            if (res.ok) window.location.reload();
+            else { alert('Error'); btn.disabled = false; btn.innerHTML = 'Confirm'; }
+        } catch (e) { alert('Error'); btn.disabled = false; btn.innerHTML = 'Confirm'; }
+    });
+
+    function openTicketModal(id, parking, date, time, slot, vehicle) {
+        document.getElementById('ticketId').innerText = '#' + id.toUpperCase();
+        document.getElementById('ticketParking').innerText = parking;
+        document.getElementById('ticketTime').innerText = `${date} | ${time}`;
+        document.getElementById('ticketSlot').innerText = slot;
+        document.getElementById('ticketVehicle').innerText = vehicle;
+        new bootstrap.Modal(document.getElementById('ticketModal')).show();
+    }
+
+    let activeExtendId = null;
+    function openExtendModal(id, parking, slot) {
+        activeExtendId = id;
+        document.getElementById('extendModalInfo').innerText = `${parking} | Slot ${slot}`;
+        new bootstrap.Modal(document.getElementById('extendModal')).show();
+    }
+
+    document.getElementById('confirmExtendBtn').addEventListener('click', async function() {
+        const mins = document.querySelector('input[name="extendMins"]:checked').value;
+        const btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Extending...';
+        
+        try {
+            const res = await fetch(`/api/bookings/${activeExtendId}/extend`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ minutes: mins })
+            });
+            const data = await res.json();
+            if (res.ok) window.location.reload();
+            else { alert(data.message || 'Error'); btn.disabled = false; btn.innerHTML = 'Confirm & Pay'; }
+        } catch (e) { alert('Network Error'); btn.disabled = false; btn.innerHTML = 'Confirm & Pay'; }
     });
 
     document.getElementById('bookingSearch').addEventListener('input', function(e) {
         const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.booking-card-wrapper, tr').forEach(el => {
-            if (el.tagName === 'TR' && el.parentElement.tagName === 'THEAD') return;
-            const text = el.innerText.toLowerCase();
-            el.style.display = text.includes(term) ? '' : 'none';
+        document.querySelectorAll('.col-lg-4, tbody tr').forEach(el => {
+            el.style.display = el.innerText.toLowerCase().includes(term) ? '' : 'none';
         });
     });
+
+    // Live Booking Timers
+    function updateTimers() {
+        document.querySelectorAll('.live-timer').forEach(timer => {
+            const endTime = new Date(timer.dataset.endtime);
+            const now = new Date();
+            const diff = endTime - now;
+
+            if (diff <= 0) {
+                timer.innerHTML = "SESSION ENDED";
+                timer.classList.remove('text-primary');
+                timer.classList.add('text-danger');
+                return;
+            }
+
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+
+            timer.innerHTML = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        });
+    }
+    setInterval(updateTimers, 1000);
+    updateTimers();
 </script>
 @endpush

@@ -1,12 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Find Parking Nearby')
+@section('title', 'Find Parking Hubs')
 
 @push('styles')
 <style>
     .search-layout {
-        height: calc(100vh - 72px);
+        height: calc(100vh - 81px); /* Navbar height */
         overflow: hidden;
+        background: var(--bg-base);
     }
 
     #map {
@@ -15,75 +16,84 @@
         z-index: 1;
     }
 
-    .search-overlay {
+    .search-overlay-refined {
         position: absolute;
-        top: 20px;
-        left: 20px;
+        top: var(--space-6);
+        left: var(--space-6);
         z-index: 1000;
-        width: 400px;
-        max-height: calc(100vh - 112px);
+        width: 420px;
+        max-height: calc(100vh - 130px);
         display: flex;
         flex-direction: column;
-        gap: 16px;
     }
 
-    .glass-search-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        padding: 24px;
+    .glass-search-results {
+        padding: var(--space-6);
         overflow-y: auto;
+        display: flex;
+        flex-direction: column;
     }
 
-    .result-card {
-        border-radius: 16px;
-        border: 1px solid #f0f0f0;
-        padding: 16px;
-        margin-bottom: 12px;
-        transition: all 0.3s ease;
-        background: white;
+    .result-item-premium {
+        margin-bottom: var(--space-4);
         cursor: pointer;
+        border: 2px solid transparent;
+        padding: var(--space-4);
     }
 
-    .result-card:hover {
-        border-color: #000;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    .result-item-premium:hover {
+        border-color: var(--border-strong);
     }
 
-    .result-card.active {
-        border-color: #000;
-        background: #f8f9fa;
+    .result-item-premium.active {
+        border-color: var(--brand-aqua);
+        box-shadow: 0 0 0 4px rgba(46, 196, 182, 0.1);
+        background: var(--bg-hover);
     }
 
-    .distance-badge {
-        font-size: 0.7rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 4px 8px;
-        background: #f0f0f0;
-        border-radius: 6px;
-        color: #666;
-    }
-
-    .price-tag {
+    .price-chip {
+        background: var(--text-primary);
+        color: var(--bg-base);
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-sm);
         font-weight: 800;
         font-size: 1.1rem;
+        box-shadow: var(--shadow-sm);
     }
 
-    /* Custom Scrollbar */
-    .glass-search-card::-webkit-scrollbar { width: 4px; }
-    .glass-search-card::-webkit-scrollbar-track { background: transparent; }
-    .glass-search-card::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
+    .distance-tag {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        background: var(--bg-elevated);
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-default);
+    }
 
-    @media (max-width: 576px) {
-        .search-overlay {
-            width: calc(100vw - 40px);
-            left: 20px;
-            top: 10px;
+    /* Scrollbar */
+    .glass-search-results::-webkit-scrollbar { width: 6px; }
+    .glass-search-results::-webkit-scrollbar-track { background: transparent; }
+    .glass-search-results::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
+
+    .leaflet-popup-content-wrapper {
+        background: var(--bg-surface) !important;
+        color: var(--text-primary) !important;
+        border-radius: var(--radius-card) !important;
+        padding: 0 !important;
+        overflow: hidden;
+        border: 1px solid var(--border-default);
+        box-shadow: var(--shadow-lg) !important;
+    }
+    .leaflet-popup-tip { background: var(--bg-surface) !important; }
+
+    @media (max-width: 768px) {
+        .search-overlay-refined {
+            width: calc(100% - var(--space-8));
+            left: var(--space-4);
+            top: var(--space-4);
         }
     }
 </style>
@@ -91,32 +101,27 @@
 
 @section('content')
 <div class="search-layout position-relative">
-    <!-- Map as Background -->
     <div id="map"></div>
 
-    <!-- Floating Search UI -->
-    <div class="search-overlay">
-        <!-- Result List Card -->
-        <div class="glass-search-card flex-grow-1">
+    <div class="search-overlay-refined">
+        <div class="surface-glass glass-search-results flex-grow-1">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="fw-bold mb-0">Nearby Parking</h5>
-                <span id="resultCount" class="badge bg-dark rounded-pill">0 Results</span>
+                <h3 class="text-h4 mb-0">System Nodes</h3>
+                <span id="resultCount" class="badge bg-elevated border text-muted px-3 py-2 rounded-pill">Scanning...</span>
             </div>
 
             <div id="loadingIndicator" class="text-center py-5">
-                <div class="spinner-border spinner-border-sm text-dark" role="status"></div>
-                <p class="small text-muted mt-2 fw-bold">Optimizing routes...</p>
+                <div class="spinner-border spinner-border-sm text-primary mb-3"></div>
+                <div class="text-h6">Optimizing Grid View...</div>
             </div>
 
-            <div id="resultsContainer">
-                <!-- JS Populated -->
-            </div>
+            <div id="resultsContainer"></div>
 
-            <div id="noResults" class="text-center py-5 d-none">
-                <i class="bi bi-geo-alt-fill text-muted fs-1 mb-3"></i>
-                <h6 class="fw-bold">No spots found here</h6>
-                <p class="small text-muted">Try searching another area or pincode.</p>
-                <a href="/" class="btn btn-sm btn-dark rounded-pill px-4">Change Location</a>
+            <div id="noResults" class="empty-state d-none my-4">
+                <i class="bi bi-geo-alt empty-state-icon"></i>
+                <h4 class="text-h4 mb-2">No Hubs Detected</h4>
+                <p class="text-secondary mb-4 text-center">Adjust your search parameters or explore another sector.</p>
+                <a href="/" class="btn btn-secondary w-100">Reset Search</a>
             </div>
         </div>
     </div>
@@ -131,16 +136,18 @@
     const lng = urlParams.get('lng');
     const isLoggedIn = @json(Auth::check());
 
-    // Initialize Map with dark/modern tiles if possible, or clean standard
-    let map = L.map('map', {
-        zoomControl: false // Hide zoom control for cleaner UI
-    }).setView([20.5937, 78.9629], 5);
+    // Map Theme logic
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const tileLayer = isDark 
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+    let map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
     
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    L.tileLayer(tileLayer, {
+        attribution: '&copy; CARTO'
     }).addTo(map);
 
-    // Reposition zoom control to bottom right
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     let markers = {};
@@ -148,16 +155,16 @@
 
     if (lat && lng) {
         L.circleMarker([lat, lng], {
-            color: '#fff',
-            fillColor: '#000',
-            fillOpacity: 1,
-            radius: 8,
-            weight: 3
-        }).addTo(map).bindPopup("<b>Your Location</b>");
+            color: '#2EC4B6',
+            fillColor: '#2EC4B6',
+            fillOpacity: 0.3,
+            radius: 12,
+            weight: 2
+        }).addTo(map).bindPopup("<b style='padding: 8px;'>Target Location</b>");
         bounds.extend([lat, lng]);
     }
 
-    // Fetch API Data
+    // API Fetch
     let apiUrl = '/api/search?';
     if (pincode) apiUrl += `pincode=${pincode}`;
     if (lat && lng) apiUrl += `lat=${lat}&lng=${lng}`;
@@ -166,10 +173,10 @@
         .then(res => res.json())
         .then(data => {
             document.getElementById('loadingIndicator').classList.add('d-none');
-            const parkings = data.data;
-            document.getElementById('resultCount').innerText = parkings.length + ' Results';
+            const hubs = data.data;
+            document.getElementById('resultCount').innerText = `${hubs.length} Active Hubs`;
 
-            if (parkings.length === 0) {
+            if (hubs.length === 0) {
                 document.getElementById('noResults').classList.remove('d-none');
                 if (lat && lng) map.setView([lat, lng], 14);
                 return;
@@ -177,49 +184,52 @@
 
             const container = document.getElementById('resultsContainer');
 
-            parkings.forEach((parking, index) => {
-                const id = parking._id || parking.id;
+            hubs.forEach(hub => {
+                const id = hub._id || hub.id;
                 
-                // Add Custom Marker
-                const marker = L.marker([parking.latitude, parking.longitude]).addTo(map);
+                // Premium Marker
+                const marker = L.marker([hub.latitude, hub.longitude]).addTo(map);
                 marker.bindPopup(`
-                    <div class="p-2">
-                        <h6 class="fw-bold mb-1">${parking.name}</h6>
-                        <p class="small text-muted mb-2">${parking.address}</p>
-                        <a href="/parking/${id}" class="btn btn-dark btn-sm w-100 py-2 rounded-3">Select Spot</a>
+                    <div class="p-4 text-center">
+                        <div class="text-h6 mb-2">${hub.city} Hub</div>
+                        <h4 class="text-h4 mb-3">${hub.name}</h4>
+                        <div class="d-flex justify-content-between align-items-center gap-4 border-top pt-3" style="border-color: var(--border-default) !important;">
+                            <span class="text-h4 text-primary mb-0">₹${hub.car_price}<span class="text-small fw-normal text-muted">/hr</span></span>
+                            <a href="/parking/${id}" class="btn btn-brand btn-sm px-4">Select</a>
+                        </div>
                     </div>
                 `);
                 markers[id] = marker;
-                bounds.extend([parking.latitude, parking.longitude]);
+                bounds.extend([hub.latitude, hub.longitude]);
 
-                // Add Card
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                card.id = `card-${id}`;
-                card.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="distance-badge">${parking.city || 'Nearby'}</span>
-                        <div class="price-tag text-dark">₹${parking.car_price || 0}<span class="small text-muted fw-normal">/hr</span></div>
+                // Result Card
+                const item = document.createElement('div');
+                item.className = 'surface-card result-item-premium hover-lift';
+                item.id = `card-${id}`;
+                item.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="distance-tag">${hub.city || 'Regional Hub'}</span>
+                        <div class="price-chip">₹${hub.car_price}</div>
                     </div>
-                    <h6 class="fw-bold mb-1 text-dark">${parking.name}</h6>
-                    <p class="small text-muted mb-3">${parking.address}</p>
+                    <h4 class="text-h4 mb-1">${hub.name}</h4>
+                    <p class="text-secondary mb-4 text-truncate">${hub.address}</p>
                     <div class="d-flex gap-2">
-                        <a href="${isLoggedIn ? '/parking/' + id : '/login?intended=/parking/' + id}" class="btn btn-dark btn-sm flex-grow-1 py-2 rounded-3 fw-bold">Book Now</a>
-                        <button class="btn btn-outline-dark btn-sm px-3 rounded-3" onclick="focusParking('${id}')"><i class="bi bi-geo-alt"></i></button>
+                        <a href="${isLoggedIn ? '/parking/' + id : '/login?intended=/parking/' + id}" class="btn btn-brand flex-grow-1 text-decoration-none">Reserve</a>
+                        <button class="btn btn-secondary px-3" onclick="focusParking('${id}')"><i class="bi bi-geo"></i></button>
                     </div>
                 `;
                 
-                card.addEventListener('mouseenter', () => {
-                    card.classList.add('active');
+                item.addEventListener('mouseenter', () => {
+                    item.classList.add('active');
                     marker.openPopup();
                 });
-                card.addEventListener('mouseleave', () => card.classList.remove('active'));
+                item.addEventListener('mouseleave', () => item.classList.remove('active'));
                 
-                container.appendChild(card);
+                container.appendChild(item);
             });
 
-            if(parkings.length > 0) {
-                map.fitBounds(bounds, {padding: [100, 100], maxZoom: 14});
+            if(hubs.length > 0) {
+                map.fitBounds(bounds, {padding: [50, 50], maxZoom: 14});
             }
         });
 

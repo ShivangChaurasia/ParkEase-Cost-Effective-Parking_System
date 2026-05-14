@@ -239,7 +239,75 @@ class BookingController extends Controller
 
     public function extendBooking(Request $request, $id)
     {
-        // Placeholder for future enhancement
-        return response()->json(['message' => 'Extension logic coming soon.'], 501);
+        $validated = $request->validate([
+            'minutes' => 'required|integer|min:15|max:120',
+        ]);
+
+        $booking = Booking::findOrFail($id);
+        $user = Auth::user();
+
+        if ($booking->user_id !== $user->_id && $booking->booking_email !== $user->email) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if ($booking->status !== 'confirmed') {
+            return response()->json(['message' => 'Only active bookings can be extended.'], 400);
+        }
+
+        // Parse current end time
+        $times = explode('-', $booking->time_slot_id);
+        $currentEnd = \Carbon\Carbon::parse($booking->date . ' ' . $times[1]);
+        $newEnd = $currentEnd->copy()->addMinutes($validated['minutes']);
+        
+        // Availability Check
+        // Check if another booking starts before our new end time and ends after our old end time
+        $collision = Booking::where('parking_lot_id', $booking->parking_lot_id)
+            ->where('slot_id', $booking->slot_id)
+            ->where('date', $booking->date)
+            ->where('_id', '!=', $booking->_id)
+            ->where('status', 'confirmed')
+            ->get()
+            ->filter(function ($b) use ($currentEnd, $newEnd) {
+                $bTimes = explode('-', $b->time_slot_id);
+                $bStart = \Carbon\Carbon::parse($b->date . ' ' . $bTimes[0]);
+                // If the existing booking starts before our new end time AND after our current end time
+                return $bStart->lt($newEnd) && $bStart->gte($currentEnd);
+            })->first();
+
+        if ($collision) {
+            return response()->json(['message' => 'Cannot extend: The slot is reserved by another user starting at ' . explode('-', $collision->time_slot_id)[0]], 409);
+        }
+
+        // Calculate Cost (Pro-rated)
+        // For simplicity: (original_price / 60) * minutes * 1.2 (premium for extension)
+        $extensionCost = round(($booking->price / 60) * $validated['minutes'] * 1.2);
+
+        // Update Booking
+        $newTimeSlotId = $times[0] . '-' . $newEnd->format('H:i');
+        $booking->time_slot_id = $newTimeSlotId;
+        $booking->price += $extensionCost;
+        $booking->save();
+
+        // Create Transaction
+        Transaction::create([
+            'user_id' => $user->_id,
+            'owner_id' => $booking->parkingLot->owner_id ?? null,
+            'booking_id' => $booking->_id,
+            'amount' => $extensionCost,
+            'type' => 'payment',
+            'status' => 'completed',
+            'payment_method' => $booking->payment_method ?? 'original',
+            'description' => "Extension ({$validated['minutes']} mins) for booking {$booking->booking_id}",
+            'metadata' => [
+                'additional_minutes' => $validated['minutes'],
+                'new_end_time' => $newEnd->format('H:i')
+            ]
+        ]);
+
+        return response()->json([
+            'message' => 'Session extended successfully',
+            'new_end_time' => $newEnd->format('H:i'),
+            'cost' => $extensionCost
+        ]);
     }
 }

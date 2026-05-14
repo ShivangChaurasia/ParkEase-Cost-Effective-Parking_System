@@ -1,51 +1,58 @@
-# Developer Checklist
+# ParkEase Developer Checklist & Roadmap
 
-This document tracks the progress of the ParkEase project. Co-developers should refer to this file before starting new features.
+This document serves as the ground truth for current implementation status and upcoming technical priorities.
 
-## ✅ Completed Tasks
+## 🟢 1. Core Infrastructure (Verified Stable)
+- [x] **Laravel 11 & PHP 8.4 Support**: Framework core is stabilized and bootable.
+- [x] **MongoDB Integration**: Multi-document models and Haversine distance queries verified.
+- [x] **Clerk Auth Sync**: Backend synchronization for user persistence is fully functional.
+- [x] **Razorpay Gateway**: Order creation and signature verification integrated.
+- [x] **PDF Invoice Engine**: Automated post-booking ticket generation active via `dompdf`.
+- [x] **Local Asset Pipeline**: High-end animations/images served locally (bypassing CDN 403s).
+- [x] **Service Container Repair**: Resolved critical "Target class [view] does not exist" errors.
 
-### Backend & Database
-- [x] Configure MongoDB connection (`mongodb/laravel-mongodb`).
-- [x] Create Eloquent Models (User, ParkingLot, Slot, TimeSlot, Booking).
-- [x] Implement API Controllers (Auth, Owner, Search, Booking).
-- [x] Implement Search filtering by Pincode and Haversine distance (lat/lng).
-- [x] Handle edge cases for missing lat/lng data to prevent 500 errors.
-- [x] Create automated backend test flow (`app/Console/Commands/TestBackendFlow.php`).
-- [x] Optimized Slot Fetching & Dashboard queries to prevent timeouts and reduce payload size.
-- [x] Implemented Guest Booking persistence with email-to-account synchronization logic.
-- [x] **New**: Fixed syntax error in `Booking.php` model that caused API 500 errors.
-- [x] **Gateway Integration**: Connected Razorpay for real-world transaction processing (UPI-First layout).
-- [x] **Booking Lifecycle**: Implemented professional reservation management with cancellation refund logic and status categorization.
+## 🟢 2. Authentication & Security (Verified Stable)
+- [x] **Identity Management**: Integrated Clerk JS SDK with unified UI.
+- [x] **Access Control**: Role-based middleware (`auth`, `onboarded`) protecting critical routes.
+- [x] **Role Switching**: Dynamic Host/User role toggling implemented.
+- [x] **KYC Onboarding**: Verification flow for new hosts is active and gated.
 
-### Frontend & UI
-- [x] Integrated Clerk Authentication Vanilla JS SDK for secure login and registration.
-- [x] Extracted Clerk configuration to `.env` variables (`VITE_CLERK_PUBLISHABLE_KEY`, `CLERK_JS_URL`).
-- [x] Implemented Frontend-to-Backend user sync (sending user payload to `/api/auth/clerk-sync` to save to MongoDB).
-- [x] Created the initial User Dashboard view (`/dashboard`).
-- [x] Build core Blade templates (`layouts/app`, `welcome`, `search`, `parking`).
-- [x] **Modern UI**: Implemented Premium Glassmorphism theme with Navy Blue / Light Blue color palette.
-- [x] **Grid Engine**: Fixed "C11/C1" selection bug and enabled robust multi-slot booking logic.
-- [x] **Owner Tools**: Created `/owner/dashboard` and `/owner/parking/{id}/manage` for manual spot bookings.
-- [x] **Responsiveness**: Fully optimized grid and dashboard views for mobile, tablet, and desktop.
-- [x] **Live Dashboard**: Added real-time "Live" status badges and timers for active parking bookings.
-- [x] **Access Control**: Refined navigation so all users land on `/dashboard`; "Owner Dashboard" visible only to active hosts.
-- [x] **Guest Flow Security**: Implemented mandatory registration/login redirects when clicking "Book Now" or entering checkout.
-- [x] **Native Settings Architecture**: Replaced Clerk popups with a premium unified Settings dashboard and embedded security management.
+## 🟡 3. Booking Engine (In Refinement)
+- [x] **Multi-slot Logic**: Validated grid selection and multi-record creation.
+- [x] **Lifecycle Management**: Tabs for Active, Upcoming, and Past reservations functional.
+- [x] **Cancellation Workflow**: Time-based refund calculation (100%/50%/0%) active.
+- [x] **Ticket Viewer**: End-to-end PDF generation and browser viewing working.
+- [x] **QR Validation**: Missing scannable token generation for gate entry.
+- [x] **Booking Timers**: Live JS countdowns implemented for active dashboard cards.
+- [x] **Session Extension**: Real-time time-addition logic with availability checking and pro-rated billing functional.
 
-## 🚧 What to Work on Next (Pending Tasks)
+## 🟢 4. Search & Discovery (Verified Stable)
+- [x] **Intelligent Filtering**: Search by Pincode or GPS coordinates active.
+- [x] **Map Discovery**: Interactive map integration for visual lot selection.
+- [x] **Slot Rendering**: Dynamic rendering of vehicle types (Bus/Car/Bike) with icons.
 
-### Phase 6: Payment Integration (High Priority)
-- [x] **PDF Invoicing**: Generate and email professional receipts/tickets after booking.
-- [ ] **Wallet System**: Implement a user wallet for one-click parking payments.
+## 🟡 5. Dashboard & Analytics (Partial)
+- [x] **Owner Dashboard**: Global statistics and lot listing active.
+- [x] **User Dashboard**: Activity feed and transaction history verified.
+- [ ] **Revenue Charts**: Visual earnings breakdown for Hosts is missing.
+- [ ] **Occupancy Heatmaps**: Real-time lot utilization visuals are not implemented.
 
-### Phase 7: Advanced "Fancy" Features
-- [ ] **Lottie Animations**: Add premium animations for success states, loading, and empty screens.
-- [ ] **WebSockets (Real-time)**: Use Laravel Reverb to update slot grids live without page refreshes.
-- [ ] **Owner Analytics**: Add Revenue charts and occupancy heatmaps to the Owner Dashboard.
-- [ ] **Social Sharing**: Enable users to share their parking location via messaging apps.
 
-### Engineering & Quality
-- [ ] **GeoSpatial Indexes**: Implement MongoDB `2dsphere` indexes for scalable location searching.
-- [ ] **Automated Testing**: Implement full suite of unit and feature tests using PHPUnit/Pest.
-- [ ] **CI/CD**: Set up GitHub Actions for automated deployment and testing.
-- [ ] **API Docs**: Document all endpoints using Swagger/OpenAPI.
+
+## 🟡 6. Design System & UI Consistency (Partial)
+- [x] **Glassmorphism**: Standardized frosted-glass cards across all dashboards.
+- [x] **SaaS Aesthetic**: Deep Teal / Aqua palette established.
+- [ ] **Centralized Tokens**: CSS variables (`:root`) need consolidation to prevent ad-hoc styling.
+- [ ] **Mobile Audit**: Complex tables in dashboards need further mobile-responsiveness polish.
+
+---
+
+## 🎯 Immediate Developer Actions
+1. **Standardize Tokens**: Move all colors/spacing from Blade files to a global `variables.css`.
+2. **Heatmap MVP**: Implement basic utilization charts on the Owner Manage page.
+
+## 📌 Postponed (Future)
+- `Real-time Infrastructure (WebSockets/Reverb)`
+- `Wallet System (Stored Balance)`
+- `Cashback/Rewards Engine`
+- `Social Sharing Integration`

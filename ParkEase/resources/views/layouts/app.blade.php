@@ -1,278 +1,321 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>ParkEase - @yield('title', 'Smart Cost-Effective Parking Booking System')</title>
+    <title>ParkEase - @yield('title', 'Smart Mobility')</title>
+
+    <!-- Theme Initialization -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
     <!-- Leaflet.js CSS for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Custom CSS -->
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="/images/favicon.png">
+    <link rel="apple-touch-icon" href="/images/favicon-180x180.png">
+
+    <!-- Premium Design System -->
+    <link rel="stylesheet" href="/css/parkease.css">
+    
     <style>
-        :root {
-            --primary: #333333;
-            --primary-hover: #000000;
-            --dark-bg: #FFFFFF;
-            --card-bg: #F8F9FA;
-            --text-light: #121212;
-            --glass-bg: rgba(255, 255, 255, 0.9);
-            --border-color: #DDDDDD;
+        .navbar-premium {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border-default);
+            padding: var(--space-3) 0;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            transition: all var(--transition-base);
         }
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--text-light);
-        }
-
-        /* Navbar */
-        .navbar {
-            background-color: #000000;
-            border-bottom: 1px solid #333333;
-        }
-        
         .navbar-brand {
             font-weight: 800;
-            color: #FFFFFF !important;
-            letter-spacing: 1px;
+            color: var(--text-primary) !important;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            text-decoration: none;
+            letter-spacing: -0.02em;
         }
 
         .navbar-brand span {
-            color: #AAAAAA;
+            color: var(--brand-aqua);
         }
 
         .nav-link {
-            color: #FFFFFF !important;
-            transition: color 0.3s;
+            color: var(--text-secondary) !important;
+            font-weight: 500;
+            padding: var(--space-2) var(--space-4) !important;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
         }
 
-        .nav-link:hover {
-            color: #CCCCCC !important;
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-primary) !important;
+            background: var(--bg-hover);
         }
 
-        .btn-primary-custom {
-            background-color: var(--primary);
-            border: none;
-            color: #fff;
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: background 0.3s, transform 0.2s;
-        }
-
-        .btn-primary-custom:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-2px);
-            color: #fff;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-
-        /* Form Controls */
-        .form-control, .form-select {
-            background-color: #FFFFFF;
-            border: 1px solid var(--border-color);
-            color: #000;
-            border-radius: 8px;
-        }
-
-        .form-control:focus, .form-select:focus {
-            background-color: #FFFFFF;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.1);
-            color: #000;
-        }
-
-        .form-control::placeholder {
-            color: #999;
-        }
-
-        /* Slot Layout Colors (Movie Theater Style) */
-        .slot-box {
-            width: 45px;
-            height: 45px;
-            display: inline-flex;
+        .theme-toggle-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            display: flex;
             align-items: center;
             justify-content: center;
-            margin: 5px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            color: var(--text-primary);
             cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid #444;
-        }
-        
-        .slot-available {
-            background-color: #E9ECEF;
-            color: #333;
-            border: 1px solid #CCC;
-        }
-        
-        .slot-available:hover {
-            background-color: var(--primary);
-            color: #FFF;
-            border-color: var(--primary);
-            transform: scale(1.1);
-        }
-        
-        .slot-booked {
-            background-color: #F8F9FA;
-            color: #ADB5BD;
-            cursor: not-allowed;
-            border: 1px solid #DEE2E6;
-            opacity: 0.7;
+            transition: all var(--transition-fast);
         }
 
-        .slot-selected {
-            background-color: var(--primary);
-            color: #fff;
-            border-color: #fff;
-            transform: scale(1.1);
-            box-shadow: 0 0 10px var(--primary);
+        .theme-toggle-btn:hover {
+            border-color: var(--brand-aqua);
+            background: var(--bg-hover);
+            transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .theme-icon-light { display: none; }
+        [data-theme="light"] .theme-icon-dark { display: none; }
+        
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            padding: var(--space-2);
+            color: var(--text-secondary);
+            transition: color var(--transition-fast);
+        }
+        
+        .notification-bell:hover {
+            color: var(--text-primary);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background: var(--brand-aqua);
+            border-radius: var(--radius-full);
+            border: 2px solid var(--bg-surface);
         }
     </style>
     @stack('styles')
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
+    <!-- Splash Screen -->
+    <div id="splash-screen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-base); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.4s ease;">
+        <div style="text-align: center;">
+            <img src="/images/favicon.png" style="width: 64px; height: 64px; opacity: 0.8;" alt="Loading">
+        </div>
+    </div>
+
+    <!-- Premium Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-premium" id="mainNavbar">
         <div class="container">
-            <a class="navbar-brand" href="/">Park<span>Ease</span></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-link-item"><a class="nav-link active" href="/">Home</a></li>
-                    <li class="nav-link-item"><a class="nav-link" href="#about">How it Works</a></li>
-                </ul>
-                <div class="d-flex align-items-center" id="nav-auth-container">
-                    <!-- Clerk Auth will be rendered here via JS -->
+            <div class="d-flex align-items-center">
+                <a class="navbar-brand me-5" href="/">
+                    <img src="/images/favicon.png" alt="Logo" style="width: 32px; height: 32px;">
+                    Park<span>Ease</span>
+                </a>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto gap-2">
+                        <li class="nav-item"><a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="/">Home</a></li>
+                        <li class="nav-item"><a class="nav-link {{ request()->is('search*') ? 'active' : '' }}" href="/search">Find Parking</a></li>
+                        @auth
+                            <li class="nav-item"><a class="nav-link {{ request()->is('dashboard*') || request()->is('owner/dashboard*') ? 'active' : '' }}" href="{{ auth()->user()->role === 'owner' ? '/owner/dashboard' : '/dashboard' }}">Dashboard</a></li>
+                        @endauth
+                    </ul>
                 </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-4">
+                <!-- Theme Toggle -->
+                <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
+                    <i class="bi bi-sun theme-icon-light"></i>
+                    <i class="bi bi-moon-stars theme-icon-dark"></i>
+                </button>
+
+                @auth
+                <div class="notification-bell d-none d-md-block">
+                    <i class="bi bi-bell fs-5"></i>
+                    <span class="notification-badge"></span>
+                </div>
+                @endauth
+
+                <div id="nav-auth-container" class="d-flex align-items-center gap-3">
+                    <!-- Auth elements injected via JS -->
+                </div>
+                
+                <button class="navbar-toggler border-0 shadow-none d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <i class="bi bi-list fs-2 text-primary"></i>
+                </button>
             </div>
         </div>
     </nav>
 
-    <main>
+    <main class="flex-grow-1">
         @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="text-center py-4 mt-5" style="border-top: 1px solid var(--border-color); background-color: var(--glass-bg);">
-        <div class="container">
-            <p class="mb-0 text-muted">&copy; {{ date('Y') }} ParkEase - Cost-Effective Parking System. All Rights Reserved.</p>
+    <footer class="py-5 mt-auto" style="background: var(--bg-surface); border-top: 1px solid var(--border-default);">
+        <div class="container text-center">
+            <h5 class="fw-bold mb-3">Park<span style="color: var(--brand-aqua);">Ease</span></h5>
+            <p class="text-muted text-small mb-4">Intelligent urban SaaS for smart mobility.</p>
+            <div class="d-flex justify-content-center gap-4 mb-4">
+                <a href="#" class="text-secondary hover-lift"><i class="bi bi-twitter-x"></i></a>
+                <a href="#" class="text-secondary hover-lift"><i class="bi bi-linkedin"></i></a>
+                <a href="#" class="text-secondary hover-lift"><i class="bi bi-github"></i></a>
+            </div>
+            <p class="text-muted text-small mb-0">&copy; {{ date('Y') }} ParkEase. Sustainable Mobility.</p>
         </div>
     </footer>
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Leaflet.js JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Floating Active Session Widget -->
+    @auth
+        @php
+            $activeBookingWidget = \App\Models\Booking::where('user_id', auth()->user()->_id)
+                ->where('status', 'confirmed')
+                ->where('date', date('Y-m-d'))
+                ->with(['parkingLot:id,name,latitude,longitude', 'slot:id,slot_number'])
+                ->get()
+                ->filter(function($b) {
+                    $times = explode('-', $b->time_slot_id);
+                    $start = \Carbon\Carbon::parse($b->date . ' ' . $times[0]);
+                    $end = \Carbon\Carbon::parse($b->date . ' ' . $times[1]);
+                    return now()->between($start, $end);
+                })
+                ->first();
+        @endphp
 
-    <!-- App Logic & Clerk Setup -->
-    <script
-        data-clerk-publishable-key="{{ env('VITE_CLERK_PUBLISHABLE_KEY') }}"
-        src="{{ env('CLERK_JS_URL') }}"
-        type="text/javascript"
-    ></script>
+        @if($activeBookingWidget)
+            @php
+                $endTimeStrWidget = explode('-', $activeBookingWidget->time_slot_id)[1];
+                $endWidget = \Carbon\Carbon::parse($activeBookingWidget->date . ' ' . $endTimeStrWidget);
+            @endphp
+            <div class="position-fixed bottom-0 end-0 p-4" style="z-index: 1050;">
+                <div class="surface-glass p-4 hover-lift" style="width: 320px;">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--brand-aqua); animation: pulse 2s infinite;"></div>
+                        <span class="text-h6 mb-0">Active Session</span>
+                    </div>
+                    <h5 class="fw-bold mb-3 text-truncate">{{ $activeBookingWidget->parkingLot->name ?? 'Parking' }}</h5>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="text-small">Slot <span class="fw-bold text-primary">{{ $activeBookingWidget->slot->slot_number ?? '?' }}</span></div>
+                        <span class="fw-bold live-timer" data-endtime="{{ $endWidget->toIso8601String() }}" style="font-family: 'Outfit', monospace; font-size: 1.1rem; color: var(--brand-aqua);">--:--:--</span>
+                    </div>
+                    
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ $activeBookingWidget->parkingLot->latitude }},{{ $activeBookingWidget->parkingLot->longitude }}" target="_blank" class="btn btn-secondary w-100">
+                        <i class="bi bi-cursor"></i> Directions
+                    </a>
+                </div>
+            </div>
+        @endif
+    @endauth
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script data-clerk-publishable-key="{{ env('VITE_CLERK_PUBLISHABLE_KEY') }}" src="{{ env('CLERK_JS_URL') }}" type="text/javascript"></script>
 
     <script>
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        }
+
         document.addEventListener("DOMContentLoaded", async function () {
             await Clerk.load();
-
             const authContainer = document.getElementById('nav-auth-container');
 
             if (Clerk.user) {
-                // User is signed in
                 @auth
                     const currentRole = '{{ auth()->user()->role }}';
-                    const hasCompletedOnboarding = '{{ auth()->user()->onboarding_completed }}' === '1' || '{{ auth()->user()->onboarding_completed }}' === 'true';
+                    const kycStatus = '{{ auth()->user()->kyc_status }}';
+                    const hasOnboarded = '{{ auth()->user()->onboarding_completed }}' === '1' || '{{ auth()->user()->onboarding_completed }}' === 'true';
                     
-                    if (hasCompletedOnboarding) {
-                        const dashboardLink = document.createElement('a');
-                        dashboardLink.href = "/dashboard";
-                        dashboardLink.className = "btn btn-outline-light me-3";
-                        dashboardLink.innerText = "Dashboard";
-                        authContainer.appendChild(dashboardLink);
-
-                        if (currentRole === 'owner') {
-                            const ownerDashboardLink = document.createElement('a');
-                            ownerDashboardLink.href = "/owner/dashboard";
-                            ownerDashboardLink.className = "btn btn-outline-light me-3";
-                            ownerDashboardLink.innerText = "Owner Dashboard";
-                            authContainer.appendChild(ownerDashboardLink);
-
-                            const roleToggleBtn = document.createElement('a');
-                            roleToggleBtn.href = "/switch-role";
-                            roleToggleBtn.className = "btn btn-warning me-3 btn-sm fw-bold";
-                            roleToggleBtn.innerText = "Switch to User";
-                            authContainer.appendChild(roleToggleBtn);
-                        } else {
-                            const roleToggleBtn = document.createElement('a');
-                            roleToggleBtn.href = "/switch-role";
-                            roleToggleBtn.className = "btn btn-warning me-3 btn-sm fw-bold";
-                            roleToggleBtn.innerText = "Become Host";
-                            authContainer.appendChild(roleToggleBtn);
+                    if (hasOnboarded) {
+                        // Role Switcher Logic - ONLY for Verified Hosts
+                        if (kycStatus === 'verified') {
+                            const switcher = document.createElement('div');
+                            switcher.className = 'nav-pills-premium d-none d-lg-flex me-2';
+                            switcher.innerHTML = `
+                                <a href="/switch-role" class="nav-link ${currentRole === 'user' ? 'active' : ''}">User</a>
+                                <a href="/switch-role" class="nav-link ${currentRole === 'owner' ? 'active' : ''}">Host</a>
+                            `;
+                            authContainer.appendChild(switcher);
                         }
+
+                        // Profile Dropdown Setup
+                        const profile = document.createElement('div');
+                        profile.className = 'dropdown';
+                        
+                        // Construct the dropdown based on host status
+                        let hostDropdownOption = '';
+                        if (kycStatus === 'verified') {
+                            hostDropdownOption = `<a class="dropdown-item-premium" href="/owner/dashboard"><i class="bi bi-buildings"></i> Host Dashboard</a>`;
+                        } else {
+                            hostDropdownOption = `<a class="dropdown-item-premium" href="/switch-role"><i class="bi bi-shop"></i> Become a Host</a>`;
+                        }
+
+                        profile.innerHTML = `
+                            <img src="${Clerk.user.imageUrl}" class="rounded-circle border border-2 hover-lift" style="width: 44px; height: 44px; cursor:pointer; border-color: var(--border-default);" data-bs-toggle="dropdown">
+                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-premium">
+                                <div class="px-3 py-3 d-flex align-items-center gap-3">
+                                    <img src="${Clerk.user.imageUrl}" class="rounded-circle" style="width: 40px; height: 40px;">
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-truncate" style="font-size: 1rem; color: var(--text-primary); line-height: 1.2;">${Clerk.user.fullName || 'User'}</div>
+                                        <div class="text-truncate text-small" style="color: var(--text-muted);">${Clerk.user.primaryEmailAddress.emailAddress}</div>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider-premium"></div>
+                                <div class="px-2 py-1">
+                                    <div class="text-h6 px-3 py-2">General</div>
+                                    <a class="dropdown-item-premium" href="/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
+                                    <a class="dropdown-item-premium" href="/dashboard?tab=transactions"><i class="bi bi-receipt"></i> Transactions</a>
+                                </div>
+                                <div class="dropdown-divider-premium"></div>
+                                <div class="px-2 py-1">
+                                    <div class="text-h6 px-3 py-2">Hosting</div>
+                                    ${hostDropdownOption}
+                                </div>
+                                <div class="dropdown-divider-premium"></div>
+                                <div class="px-2 py-1">
+                                    <a class="dropdown-item-premium" href="/settings"><i class="bi bi-gear"></i> Settings</a>
+                                    <a class="dropdown-item-premium text-danger mt-1" href="javascript:void(0)" onclick="handleGlobalLogout()"><i class="bi bi-box-arrow-right text-danger"></i> Sign Out</a>
+                                </div>
+                            </div>
+                        `;
+                        authContainer.appendChild(profile);
                     }
-                @else
-                    const dashboardLink = document.createElement('a');
-                    dashboardLink.href = "/dashboard";
-                    dashboardLink.className = "btn btn-outline-light me-3";
-                    dashboardLink.innerText = "Dashboard";
-                    authContainer.appendChild(dashboardLink);
                 @endauth
 
-                @auth
-                    if (currentRole === 'owner' && '{{ auth()->user()->photo_path }}') {
-                        const hostPhoto = document.createElement('img');
-                        hostPhoto.src = '/{{ auth()->user()->photo_path }}';
-                        hostPhoto.className = 'rounded-circle me-3 border border-2 border-primary';
-                        hostPhoto.style.width = '36px';
-                        hostPhoto.style.height = '36px';
-                        hostPhoto.style.objectFit = 'cover';
-                        authContainer.appendChild(hostPhoto);
-                    }
-                @endauth
-                
-                const profileLink = document.createElement('a');
-                profileLink.href = "/settings";
-                profileLink.className = "d-flex align-items-center text-decoration-none ms-2";
-                profileLink.title = "Account Settings";
-                
-                const avatar = document.createElement('img');
-                avatar.src = Clerk.user.imageUrl;
-                avatar.className = "rounded-circle border border-2 border-light shadow-sm";
-                avatar.style.width = "40px";
-                avatar.style.height = "40px";
-                avatar.style.objectFit = "cover";
-                
-                profileLink.appendChild(avatar);
-                authContainer.appendChild(profileLink);
-
-                // Sync with Laravel Backend
+                // Sync Logic
                 if (!sessionStorage.getItem('clerk_synced')) {
                     const token = await Clerk.session.getToken();
                     try {
@@ -281,48 +324,64 @@
                             headers: {
                                 'Authorization': `Bearer ${token}`,
                                 'Content-Type': 'application/json',
-                                'Accept': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             body: JSON.stringify({
                                 clerk_id: Clerk.user.id,
-                                email: Clerk.user.primaryEmailAddress ? Clerk.user.primaryEmailAddress.emailAddress : '',
-                                first_name: Clerk.user.firstName || '',
-                                last_name: Clerk.user.lastName || ''
+                                email: Clerk.user.primaryEmailAddress.emailAddress,
+                                first_name: Clerk.user.firstName,
+                                last_name: Clerk.user.lastName
                             })
                         });
-                        
                         if (response.ok) {
-                            const data = await response.json();
                             sessionStorage.setItem('clerk_synced', 'true');
-                            if (data.redirect && window.location.pathname !== data.redirect) {
-                                window.location.href = data.redirect;
-                            } else {
-                                window.location.reload(); // Reload to apply Laravel Auth state to UI
-                            }
+                            window.location.reload();
                         }
-                    } catch (e) {
-                        console.error('Failed to sync with backend', e);
-                    }
-                } else {
-                    if (typeof renderClerkComponent === 'function') {
-                        renderClerkComponent();
-                    }
+                    } catch (e) { console.error(e); }
                 }
-
             } else {
-                // User is not signed in
-                sessionStorage.removeItem('clerk_synced');
                 authContainer.innerHTML = `
-                    <a href="/login" class="btn btn-outline-light me-2">Login</a>
-                    <a href="/register" class="btn btn-primary-custom">Register</a>
+                    <a href="/login" class="nav-link fw-bold px-0 me-3">Log in</a>
+                    <a href="/register" class="btn btn-brand">Sign up</a>
                 `;
-                
-                if (typeof renderClerkComponent === 'function') {
-                    renderClerkComponent();
+            }
+            
+            if (typeof window.renderClerkComponent === 'function') {
+                window.renderClerkComponent();
+            }
+
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                if (splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.style.display = 'none', 400);
                 }
+            }, 400);
+
+            // Timer logic
+            if (document.querySelector('.live-timer')) {
+                setInterval(() => {
+                    document.querySelectorAll('.live-timer').forEach(el => {
+                        const endTime = new Date(el.getAttribute('data-endtime')).getTime();
+                        const now = new Date().getTime();
+                        const distance = endTime - now;
+                        if (distance < 0) { el.innerHTML = "EXPIRED"; return; }
+                        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const s = Math.floor((distance % (1000 * 60)) / 1000);
+                        el.innerHTML = (h < 10 ? "0"+h : h) + "h " + (m < 10 ? "0"+m : m) + "m " + (s < 10 ? "0"+s : s) + "s";
+                    });
+                }, 1000);
             }
         });
+
+        window.handleGlobalLogout = async function() {
+            await Clerk.signOut();
+            fetch('/api/logout', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+            }).finally(() => window.location.href = '/');
+        }
     </script>
     @stack('scripts')
 </body>

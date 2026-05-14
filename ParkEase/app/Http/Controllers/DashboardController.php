@@ -56,8 +56,14 @@ class DashboardController extends Controller
         $transactions = Transaction::where('user_id', $user->_id)
             ->orderBy('created_at', 'desc')
             ->get();
+        $stats = [
+            'total_bookings' => $bookings->count(),
+            'active_sessions' => count($categorized['active']),
+            'total_spent' => $transactions->where('type', 'payment')->where('status', 'completed')->sum('amount'),
+            'total_refunds' => $transactions->where('type', 'refund')->where('status', 'completed')->sum('amount'),
+        ];
             
-        return view('dashboard', compact('categorized', 'transactions'));
+        return view('dashboard', compact('categorized', 'transactions', 'stats'));
     }
 
     public function ownerDashboard()
