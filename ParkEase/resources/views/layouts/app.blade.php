@@ -136,8 +136,7 @@
         <div class="container">
             <div class="d-flex align-items-center">
                 <a class="navbar-brand me-5" href="/">
-                    <img src="/images/favicon.png" alt="Logo" style="width: 32px; height: 32px;">
-                    Park<span>Ease</span>
+                    <img src="/images/favicon.png" alt="Logo" style="width: 32px; height: 32px;">Park<span>Ease</span>
                 </a>
                 
                 <div class="collapse navbar-collapse" id="navbarNav">

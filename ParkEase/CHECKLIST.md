@@ -17,7 +17,7 @@ This document serves as the ground truth for current implementation status and u
 - [x] **Role Switching**: Dynamic Host/User role toggling implemented.
 - [x] **KYC Onboarding**: Verification flow for new hosts is active and gated.
 
-## 🟡 3. Booking Engine (In Refinement)
+## 🟢 3. Booking Engine (In Refinement)
 - [x] **Multi-slot Logic**: Validated grid selection and multi-record creation.
 - [x] **Lifecycle Management**: Tabs for Active, Upcoming, and Past reservations functional.
 - [x] **Cancellation Workflow**: Time-based refund calculation (100%/50%/0%) active.
