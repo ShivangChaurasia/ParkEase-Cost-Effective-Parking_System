@@ -136,17 +136,27 @@
     const lng = urlParams.get('lng');
     const isLoggedIn = @json(Auth::check());
 
-    // Map Theme logic
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const tileLayer = isDark 
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    let currentTileLayer = null;
+    function setMapTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const tileUrl = isDark 
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+        
+        if (currentTileLayer) map.removeLayer(currentTileLayer);
+        currentTileLayer = L.tileLayer(tileUrl, { attribution: '&copy; CARTO' }).addTo(map);
+    }
 
     let map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
-    
-    L.tileLayer(tileLayer, {
-        attribution: '&copy; CARTO'
-    }).addTo(map);
+    setMapTheme();
+
+    // Listen for theme changes dynamically
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.attributeName === 'data-theme') setMapTheme();
+        });
+    });
+    observer.observe(document.documentElement, { attributes: true });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 

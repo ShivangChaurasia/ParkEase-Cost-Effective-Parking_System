@@ -254,11 +254,11 @@
                     {{ \Carbon\Carbon::parse($booking->date)->format('d M Y') }}<br>
                     <small style="color:#64748b;">
                         <?php 
-                            $timeSlot = \App\Models\TimeSlot::find($booking->time_slot_id);
-                            if ($timeSlot) {
-                                echo \Carbon\Carbon::parse($timeSlot->start_time)->format('h:i A') . ' - ' . \Carbon\Carbon::parse($timeSlot->end_time)->format('h:i A');
+                            $times = explode('-', $booking->time_slot_id);
+                            if (count($times) == 2) {
+                                echo \Carbon\Carbon::parse($times[0])->format('h:i A') . ' - ' . \Carbon\Carbon::parse($times[1])->format('h:i A');
                             } else {
-                                echo 'N/A';
+                                echo $booking->time_slot_id;
                             }
                         ?>
                     </small>

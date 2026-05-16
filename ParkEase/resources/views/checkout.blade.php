@@ -6,10 +6,10 @@
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-6">
-            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-                <div class="bg-dark text-white p-4 text-center">
-                    <h3 class="fw-bold mb-0">Order Summary</h3>
-                    <p class="text-white-50 small mb-0">Confirm your details and pay</p>
+            <div class="surface-card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="p-4 text-center border-bottom border-subtle" style="background: var(--bg-elevated);">
+                    <h3 class="text-h3 mb-0">Order Summary</h3>
+                    <p class="text-secondary small mb-0">Confirm your details and pay</p>
                 </div>
                 
                 <div class="card-body p-4">
@@ -18,7 +18,7 @@
                         <h5 class="fw-bold mb-3 border-bottom pb-2">Parking Details</h5>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Parking Area:</span>
-                            <span class="fw-bold text-dark">{{ $lot->name }}</span>
+                            <span class="fw-bold text-primary">{{ $lot->name }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Location:</span>
@@ -46,17 +46,17 @@
                         <h5 class="fw-bold mb-3 border-bottom pb-2">Customer Information</h5>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">Full Name</label>
-                            <input type="text" id="cust_name" class="form-control rounded-3" placeholder="Enter your name" value="{{ Auth::user()->name ?? '' }}">
+                            <input type="text" id="cust_name" class="form-control-premium w-100" placeholder="Enter your name" value="{{ Auth::user()->name ?? '' }}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">Email Address</label>
-                            <input type="email" id="cust_email" class="form-control rounded-3" placeholder="name@example.com" value="{{ Auth::user()->email ?? '' }}">
-                            <div class="form-text small">Access this booking anytime using the same email.</div>
+                            <input type="email" id="cust_email" class="form-control-premium w-100" placeholder="name@example.com" value="{{ Auth::user()->email ?? '' }}">
+                            <div class="form-text text-secondary small">Access this booking anytime using the same email.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">Phone Number <span class="text-danger">*</span></label>
-                            <input type="tel" id="cust_phone" class="form-control rounded-3" placeholder="10-digit mobile number" required>
-                            <div class="form-text small">Required for seamless payment experience.</div>
+                            <input type="tel" id="cust_phone" class="form-control-premium w-100" placeholder="10-digit mobile number" required>
+                            <div class="form-text text-secondary small">Required for seamless payment experience.</div>
                         </div>
                     </div>
 
@@ -65,15 +65,15 @@
                         <h5 class="fw-bold mb-3">Select Payment Method</h5>
                         <div class="d-grid gap-2">
                             <!-- Razorpay Options -->
-                            <div class="form-check card p-3 border rounded-3 cursor-pointer payment-option active" data-method="razorpay">
+                            <div class="form-check surface-card p-3 border border-subtle rounded-3 cursor-pointer payment-option active hover-lift" data-method="razorpay">
                                 <input class="form-check-input d-none" type="radio" name="paymentMethod" id="razorpay_gateway" value="razorpay" checked>
                                 <label class="form-check-label d-flex align-items-center w-100 cursor-pointer" for="razorpay_gateway">
-                                    <i class="bi bi-credit-card fs-4 me-3 text-primary"></i>
+                                    <i class="bi bi-credit-card fs-4 me-3 text-brand"></i>
                                     <div>
-                                        <div class="fw-bold">Pay Online (Instant)</div>
+                                        <div class="fw-bold text-primary">Pay Online (Instant)</div>
                                         <div class="small text-muted text-nowrap">UPI, Cards, Net Banking</div>
                                     </div>
-                                    <i class="bi bi-check-circle-fill ms-auto text-primary check-icon"></i>
+                                    <i class="bi bi-check-circle-fill ms-auto text-brand check-icon"></i>
                                 </label>
                             </div>
 
@@ -82,7 +82,7 @@
 
 
 
-                    <button id="payNowBtn" class="btn btn-primary-custom w-100 py-3 fs-5 shadow">
+                    <button id="payNowBtn" class="btn btn-brand w-100 py-3 fs-5 shadow">
                         Pay & Confirm Booking
                     </button>
                     

@@ -49,7 +49,7 @@
         .navbar-brand {
             font-weight: 800;
             color: var(--text-primary) !important;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             display: flex;
             align-items: center;
             gap: var(--space-2);
@@ -127,7 +127,7 @@
     <!-- Splash Screen -->
     <div id="splash-screen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-base); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.4s ease;">
         <div style="text-align: center;">
-            <img src="/images/favicon.png" style="width: 64px; height: 64px; opacity: 0.8;" alt="Loading">
+            <img src="/images/favicon.png" style="width: 80px; height: 80px; opacity: 0.8;" alt="Loading">
         </div>
     </div>
 
@@ -136,7 +136,7 @@
         <div class="container">
             <div class="d-flex align-items-center">
                 <a class="navbar-brand me-5" href="/">
-                    <img src="/images/favicon.png" alt="Logo" style="width: 32px; height: 32px;">Park<span>Ease</span>
+                    <img src="/images/favicon.png" alt="Logo" style="width: 50px; height: 50px;"><span>Park<span>Ease</span></span>
                 </a>
                 
                 <div class="collapse navbar-collapse" id="navbarNav">
@@ -181,7 +181,10 @@
 
     <footer class="py-5 mt-auto" style="background: var(--bg-surface); border-top: 1px solid var(--border-default);">
         <div class="container text-center">
-            <h5 class="fw-bold mb-3">Park<span style="color: var(--brand-aqua);">Ease</span></h5>
+            <h3 class="fw-bold mb-3 d-flex align-items-center justify-content-center gap-2">
+                <img src="/images/favicon.png" alt="Logo" style="width: 40px; height: 40px;">
+                <span>Park<span style="color: var(--brand-aqua);">Ease</span></span>
+            </h3>
             <p class="text-muted text-small mb-4">Intelligent urban SaaS for smart mobility.</p>
             <div class="d-flex justify-content-center gap-4 mb-4">
                 <a href="#" class="text-secondary hover-lift"><i class="bi bi-twitter-x"></i></a>
@@ -253,7 +256,9 @@
             const authContainer = document.getElementById('nav-auth-container');
 
             if (Clerk.user) {
+                let isLaravelAuth = false;
                 @auth
+                    isLaravelAuth = true;
                     const currentRole = '{{ auth()->user()->role }}';
                     const kycStatus = '{{ auth()->user()->kyc_status }}';
                     const hasOnboarded = '{{ auth()->user()->onboarding_completed }}' === '1' || '{{ auth()->user()->onboarding_completed }}' === 'true';
@@ -314,6 +319,11 @@
                     }
                 @endauth
 
+                // If Clerk says logged in, but Laravel is not, force sync by clearing the flag
+                if (!isLaravelAuth) {
+                    sessionStorage.removeItem('clerk_synced');
+                }
+
                 // Sync Logic
                 if (!sessionStorage.getItem('clerk_synced')) {
                     const token = await Clerk.session.getToken();
@@ -335,8 +345,14 @@
                         if (response.ok) {
                             sessionStorage.setItem('clerk_synced', 'true');
                             window.location.reload();
+                        } else {
+                            // If sync fails (e.g. CSRF token mismatch), force a hard logout
+                            await Clerk.signOut();
+                            window.location.href = '/login';
                         }
-                    } catch (e) { console.error(e); }
+                    } catch (e) { 
+                        console.error(e); 
+                    }
                 }
             } else {
                 authContainer.innerHTML = `

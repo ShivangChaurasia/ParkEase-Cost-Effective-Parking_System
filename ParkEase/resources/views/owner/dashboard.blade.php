@@ -14,60 +14,61 @@
     <!-- Host Profile Section -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card p-4 d-flex flex-row align-items-center gap-4">
+            <div class="surface-card p-4 d-flex flex-row align-items-center gap-4">
                 @if(auth()->user()->photo_path)
-                    <img src="/{{ auth()->user()->photo_path }}" alt="Host Photo" class="rounded-circle border border-3 border-dark" style="width: 80px; height: 80px; object-fit: cover;">
+                    <img src="/{{ auth()->user()->photo_path }}" alt="Host Photo" class="rounded-circle border border-3 border-subtle" style="width: 80px; height: 80px; object-fit: cover;">
                 @else
-                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 24px;">
+                    <div class="rounded-circle bg-elevated text-primary d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 24px; border: 1px solid var(--border-default);">
                         <i class="bi bi-person"></i>
                     </div>
                 @endif
                 <div>
-                    <h5 class="fw-bold mb-1">{{ auth()->user()->name }}</h5>
+                    <h5 class="text-h5 mb-1">{{ auth()->user()->name }}</h5>
                     <p class="text-muted mb-0 small">Phone: {{ auth()->user()->phone }} | Aadhaar: **** **** {{ substr(auth()->user()->aadhaar_no, -4) }}</p>
                 </div>
                 <div class="ms-auto">
-                    <a href="/owner/kyc" class="btn btn-outline-dark btn-sm">Edit KYC Details</a>
+                    <a href="/owner/kyc" class="btn btn-secondary btn-sm">Edit KYC Details</a>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Analytics Cards -->
     <!-- Analytics Cards -->
     <!-- Analytics Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card p-4 text-center shadow-sm border-0 bg-white">
+            <div class="surface-card p-4 text-center hover-lift border-0">
                 <h6 class="text-muted text-uppercase fw-bold ls-1 small">Properties</h6>
-                <h2 class="fw-bold mb-0 text-dark">{{ $totalParkingLots }}</h2>
+                <h2 class="text-h2 mb-0 text-primary">{{ $totalParkingLots }}</h2>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-4 text-center shadow-sm border-0 bg-white">
+            <div class="surface-card p-4 text-center hover-lift border-0">
                 <h6 class="text-muted text-uppercase fw-bold ls-1 small">Total Slots</h6>
-                <h2 class="fw-bold mb-0 text-dark">{{ $totalSlots }}</h2>
+                <h2 class="text-h2 mb-0 text-primary">{{ $totalSlots }}</h2>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-4 text-center shadow-sm border-0 bg-primary-subtle">
-                <h6 class="text-primary text-uppercase fw-bold ls-1 small">Active Bookings</h6>
-                <h2 class="fw-bold mb-0 text-primary">{{ $activeBookingsCount }}</h2>
+            <div class="surface-card p-4 text-center hover-lift border-0" style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.1) !important;">
+                <h6 class="text-info text-uppercase fw-bold ls-1 small">Active Bookings</h6>
+                <h2 class="text-h2 mb-0 text-info">{{ $activeBookingsCount }}</h2>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-4 text-center shadow-sm border-0 bg-success-subtle">
+            <div class="surface-card p-4 text-center hover-lift border-0" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1) !important;">
                 <h6 class="text-success text-uppercase fw-bold ls-1 small">Total Earnings</h6>
-                <h2 class="fw-bold mb-0 text-success">₹{{ number_format($totalEarnings, 2) }}</h2>
+                <h2 class="text-h2 mb-0 text-success">₹{{ number_format($totalEarnings, 2) }}</h2>
             </div>
         </div>
     </div>
 
-    <ul class="nav nav-pills nav-fill bg-white p-2 rounded-4 shadow-sm mb-5 border" id="ownerDashboardTabs" role="tablist">
+    <ul class="nav nav-pills-premium justify-content-center mb-5" id="ownerDashboardTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold py-3 rounded-3" id="properties-tab" data-bs-toggle="tab" data-bs-target="#properties" type="button" role="tab">My Parking Areas</button>
+            <button class="nav-link active px-5 py-3" id="properties-tab" data-bs-toggle="tab" data-bs-target="#properties" type="button" role="tab">My Parking Areas</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold py-3 rounded-3" id="financials-tab" data-bs-toggle="tab" data-bs-target="#financials" type="button" role="tab">Earnings & Financials</button>
+            <button class="nav-link px-5 py-3" id="financials-tab" data-bs-toggle="tab" data-bs-target="#financials" type="button" role="tab">Earnings & Financials</button>
         </li>
     </ul>
 
@@ -77,8 +78,8 @@
             <div class="row">
                 <!-- Add Parking Lot Form -->
                 <div class="col-lg-7 mb-5">
-                    <div class="card p-4 border-0 shadow-sm rounded-4">
-                        <h4 class="mb-4 fw-bold">Register New Parking Area</h4>
+                    <div class="surface-card p-4 border-0 rounded-4">
+                        <h4 class="text-h4 mb-4">Register New Parking Area</h4>
                         <form id="addParkingForm">
                             @csrf
                             <div class="row g-3">
@@ -159,21 +160,21 @@
 
                 <!-- Registered Parking Lots -->
                 <div class="col-lg-5">
-                    <h4 class="mb-4 fw-bold">Your Parking Areas</h4>
+                    <h4 class="text-h4 mb-4">Your Parking Areas</h4>
                     @if($parkingLots->isEmpty())
-                        <div class="alert alert-light border text-center p-4">
+                        <div class="empty-state text-center p-4">
                             <p class="mb-0 text-muted">You haven't registered any parking areas yet.</p>
                         </div>
                     @else
                         <div class="d-flex flex-column gap-3">
                             @foreach($parkingLots as $lot)
-                                <div class="card p-3 border-0 shadow-sm rounded-4">
-                                    <h5 class="fw-bold mb-1">{{ $lot->name }}</h5>
+                                <div class="surface-card p-3 border-0 rounded-4 mb-3">
+                                    <h5 class="text-h5 mb-1">{{ $lot->name }}</h5>
                                     <p class="text-muted small mb-2"><i class="bi bi-geo-alt text-primary"></i> {{ $lot->address }}, {{ $lot->city }} - {{ $lot->pincode }}</p>
                                     <div class="d-flex justify-content-between align-items-center mt-2">
                                         <div class="d-flex gap-1">
-                                            <span class="badge bg-light text-dark border">Car: ₹{{ $lot->car_price ?? 0 }}</span>
-                                            <span class="badge bg-light text-dark border">Bike: ₹{{ $lot->bike_price ?? 0 }}</span>
+                                            <span class="badge bg-elevated border border-subtle text-primary">Car: ₹{{ $lot->car_price ?? 0 }}</span>
+                                            <span class="badge bg-elevated border border-subtle text-primary">Bike: ₹{{ $lot->bike_price ?? 0 }}</span>
                                         </div>
                                         <span class="small text-muted">{{ $lot->opening_time }} - {{ $lot->closing_time }}</span>
                                     </div>
@@ -192,13 +193,13 @@
         <div class="tab-pane fade" id="financials" role="tabpanel">
             <div class="row">
                 <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                        <div class="card-header bg-white py-3">
-                            <h5 class="fw-bold mb-0">Transaction History</h5>
+                    <div class="surface-card border-0 rounded-4 overflow-hidden">
+                        <div class="p-4 border-bottom border-subtle">
+                            <h5 class="text-h5 mb-0">Transaction History</h5>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0 align-middle">
-                                <thead class="bg-light">
+                            <table class="table mb-0 align-middle">
+                                <thead>
                                     <tr>
                                         <th class="px-4 py-3">Transaction ID</th>
                                         <th class="py-3">Date</th>
@@ -253,10 +254,27 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Initialize Map
+        let currentTileLayer = null;
+        function setMapTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const tileUrl = isDark 
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+            
+            if (currentTileLayer) map.removeLayer(currentTileLayer);
+            currentTileLayer = L.tileLayer(tileUrl, { attribution: '&copy; CARTO' }).addTo(map);
+        }
+
         const map = L.map('ownerMap').setView([20.5937, 78.9629], 5); // Center of India
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+        setMapTheme();
+
+        // Listen for theme changes dynamically
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                if (mutation.attributeName === 'data-theme') setMapTheme();
+            });
+        });
+        observer.observe(document.documentElement, { attributes: true });
 
         let marker;
 

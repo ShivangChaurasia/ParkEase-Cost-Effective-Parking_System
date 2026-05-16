@@ -22,7 +22,7 @@ class InvoiceController extends Controller
     {
         try {
             // Ensure relationships are loaded
-            $booking->load(['user', 'parkingLot', 'slot', 'timeSlot']);
+            $booking->load(['user', 'parkingLot', 'slot']);
 
             // Prepare data for the PDF view
             $data = [

@@ -6,6 +6,7 @@ use App\Models\ParkingLot;
 use App\Models\Slot;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 
 class OwnerController extends Controller
@@ -84,7 +85,7 @@ class OwnerController extends Controller
                 default => 0,
             };
     
-            $bookings[] = Booking::create([
+            $booking = Booking::create([
                 'user_id' => Auth::id(), // Booked by the owner
                 'parking_lot_id' => $parkingLot->_id,
                 'slot_id' => $slot->_id,
@@ -95,8 +96,31 @@ class OwnerController extends Controller
                 'booking_id' => strtoupper(\Illuminate\Support\Str::random(10)),
                 'customer_name' => $validated['customer_name'],
                 'customer_phone' => $validated['customer_phone'],
-                'is_manual' => true
+                'is_manual' => true,
+                'payment_method' => 'cash' // Record that it was a manual cash booking
             ]);
+
+            // Generate Invoice
+            \App\Http\Controllers\InvoiceController::generateInvoice($booking);
+
+            // Record transaction for owner dashboard
+            Transaction::create([
+                'user_id' => Auth::id(), // The owner who created it
+                'owner_id' => Auth::id(), // The owner themselves
+                'booking_id' => $booking->_id,
+                'amount' => $price,
+                'type' => 'earning',
+                'status' => 'completed',
+                'payment_method' => 'cash',
+                'description' => "Manual Booking (Cash): Slot {$slot->slot_number} - {$validated['customer_name']}",
+                'metadata' => [
+                    'date' => $validated['date'],
+                    'time_slot' => $validated['time_slot_id'],
+                    'customer' => $validated['customer_name']
+                ]
+            ]);
+            
+            $bookings[] = $booking;
         }
     
         return response()->json([
