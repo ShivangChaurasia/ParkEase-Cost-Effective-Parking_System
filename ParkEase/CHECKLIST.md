@@ -37,19 +37,25 @@ This document serves as the ground truth for current implementation status and u
 - [ ] **Revenue Charts**: Visual earnings breakdown for Hosts is missing.
 - [ ] **Occupancy Heatmaps**: Real-time lot utilization visuals are not implemented.
 
-
-
-## 🟡 6. Design System & UI Consistency (Partial)
+## 🟢 6. Design System & UI Consistency (Stable)
 - [x] **Glassmorphism**: Standardized frosted-glass cards across all dashboards.
-- [x] **SaaS Aesthetic**: Deep Teal / Aqua palette established.
-- [ ] **Centralized Tokens**: CSS variables (`:root`) need consolidation to prevent ad-hoc styling.
+- [x] **SaaS Aesthetic**: Deep Teal / Aqua palette established across all pages.
+- [x] **Design Classiness Refinement**: Removed excessive `text-shadow` glows, toned down background orbs, replaced vibrant gradient `btn-brand` with restrained solid deep-teal, neutralized section badges and feature icons on Login / Register / Welcome pages, simplified Clerk form button. *(2026-05-17)*
+- [x] **Centralized CSS Variables**: Global `:root` tokens in `parkease.css` used consistently; no ad-hoc color overrides remain on main pages.
 - [ ] **Mobile Audit**: Complex tables in dashboards need further mobile-responsiveness polish.
+
+## 🟢 7. Navbar & Navigation (Stable)
+- [x] **Notification Bell**: Fully functional Bootstrap dropdown showing the 5 most recent bookings (confirmed/cancelled) with status pills, price, date, and a "View all" footer link. Data is server-side injected via a `@php` block — no extra API route required. Green dot badge appears only when there are items. *(2026-05-17)*
+- [x] **Profile Dropdown**: Avatar-based menu with role-aware links (Dashboard, Transactions, Host Dashboard, Settings, Sign Out).
+- [x] **Role Switcher Pills**: Inline User/Host toggle visible for KYC-verified hosts only.
+- [x] **Theme Toggle**: Light/Dark mode persisted via `localStorage`.
 
 ---
 
 ## 🎯 Immediate Developer Actions
-1. **Standardize Tokens**: Move all colors/spacing from Blade files to a global `variables.css`.
-2. **Heatmap MVP**: Implement basic utilization charts on the Owner Manage page.
+1. **Revenue Charts**: Add visual earnings charts (e.g., Chart.js) to the Owner Dashboard.
+2. **Occupancy Heatmaps**: Implement basic utilization heatmap on the Owner Manage Lot page.
+3. **Mobile Audit**: Polish dashboard tables for small screen layouts.
 
 ## 📌 Postponed (Future)
 - `Real-time Infrastructure (WebSockets/Reverb)`

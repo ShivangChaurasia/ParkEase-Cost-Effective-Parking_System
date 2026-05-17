@@ -19,7 +19,7 @@
         right: -5%;
         width: 55vw;
         height: 55vw;
-        background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(14, 94, 111, 0) 70%);
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.04) 0%, rgba(14, 94, 111, 0) 70%);
         border-radius: 50%;
         z-index: 0;
         pointer-events: none;
@@ -32,7 +32,7 @@
         left: -10%;
         width: 60vw;
         height: 60vw;
-        background: radial-gradient(circle, rgba(46, 196, 182, 0.2) 0%, rgba(4, 17, 22, 0) 70%);
+        background: radial-gradient(circle, rgba(46, 196, 182, 0.05) 0%, rgba(4, 17, 22, 0) 70%);
         border-radius: 50%;
         z-index: 0;
         pointer-events: none;
@@ -100,7 +100,6 @@
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
         border-radius: 24px;
-        box-shadow: inset 0 0 40px rgba(56, 189, 248, 0.05);
         pointer-events: none;
     }
 
@@ -110,7 +109,6 @@
     }
 
     .hero-text-glow {
-        text-shadow: 0 0 40px rgba(56, 189, 248, 0.4);
         line-height: 1.1;
     }
 
@@ -118,30 +116,28 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 16px;
-        background: rgba(56, 189, 248, 0.1);
-        border: 1px solid rgba(56, 189, 248, 0.2);
+        padding: 6px 14px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
         border-radius: 99px;
-        color: var(--brand-turquoise);
-        font-weight: 600;
-        font-size: 0.875rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 0.85rem;
         margin-bottom: var(--space-6);
-        backdrop-filter: blur(4px);
-        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.1);
     }
     
     .feature-item-icon {
-        width: 56px; 
-        height: 56px; 
-        background: linear-gradient(135deg, rgba(14, 94, 111, 0.4), rgba(56, 189, 248, 0.1));
-        border: 1px solid rgba(56, 189, 248, 0.2);
-        border-radius: 16px;
+        width: 48px; 
+        height: 48px; 
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-default);
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--brand-turquoise);
-        font-size: 1.5rem;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        color: var(--text-secondary);
+        font-size: 1.25rem;
+        flex-shrink: 0;
     }
 
     .clerk-loading-container {
@@ -266,14 +262,14 @@
                         textAlign: 'left'
                     },
                     formButtonPrimary: {
-                        background: 'var(--gradient-secondary)', // Distinct gradient for signup
+                        background: '#0E5E6F',
                         border: 'none',
-                        boxShadow: '0 4px 12px rgba(14, 94, 111, 0.3)',
-                        transition: 'all 0.3s ease',
+                        boxShadow: 'none',
+                        transition: 'all 0.2s ease',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
-                        fontWeight: '700',
-                        fontSize: '1rem',
+                        fontWeight: '600',
+                        fontSize: '0.9rem',
                         padding: '12px 20px',
                         color: '#FFFFFF'
                     },

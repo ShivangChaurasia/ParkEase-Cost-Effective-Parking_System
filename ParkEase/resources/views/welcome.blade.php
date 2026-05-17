@@ -8,8 +8,8 @@
 <style>
     .hero-section {
         padding: var(--space-16) 0 var(--space-12);
-        background: radial-gradient(circle at top right, rgba(46, 196, 182, 0.08), transparent 40%),
-                    radial-gradient(circle at bottom left, rgba(56, 189, 248, 0.05), transparent 40%);
+        background: radial-gradient(circle at top right, rgba(46, 196, 182, 0.04), transparent 40%),
+                    radial-gradient(circle at bottom left, rgba(56, 189, 248, 0.02), transparent 40%);
     }
 
     .trust-badge {
@@ -91,11 +91,12 @@
     .section-badge {
         display: inline-block;
         padding: var(--space-1) var(--space-3);
-        background: rgba(46, 196, 182, 0.1);
-        color: var(--brand-aqua);
+        background: var(--bg-elevated);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-default);
         border-radius: var(--radius-sm);
-        font-weight: 700;
-        font-size: 0.85rem;
+        font-weight: 600;
+        font-size: 0.8rem;
         text-transform: uppercase;
         letter-spacing: 1px;
         margin-bottom: var(--space-3);
@@ -118,7 +119,7 @@
     }
 
     lottie-player {
-        filter: drop-shadow(0 20px 50px rgba(46, 196, 182, 0.15));
+        filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.12));
     }
 </style>
 @endpush
@@ -227,7 +228,7 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-5 mb-5 mb-lg-0">
-                <span class="section-badge" style="background: rgba(56, 189, 248, 0.1); color: var(--brand-turquoise);">For Hosts</span>
+                <span class="section-badge">For Hosts</span>
                 <h2 class="text-h2 mb-4">Monetize Your Space.</h2>
                 <p class="text-lead mb-4">Turn your empty driveway, commercial lot, or unused garage into a steady stream of passive income with our powerful host tools.</p>
                 <ul class="list-unstyled d-flex flex-column gap-3 mb-5">

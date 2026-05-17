@@ -120,10 +120,11 @@ p { color: var(--text-secondary); margin-bottom: var(--space-4); }
 .text-small { font-size: 0.875rem; color: var(--text-secondary); }
 
 .text-gradient {
-    background: var(--gradient-primary);
+    background: linear-gradient(135deg, #2EC4B6 0%, #5ABBE0 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     display: inline-block;
+    opacity: 0.9;
 }
 
 /* Premium Layout Surfaces */
@@ -165,7 +166,7 @@ p { color: var(--text-secondary); margin-bottom: var(--space-4); }
     text-decoration: none;
 }
 
-.btn:focus { outline: none; box-shadow: 0 0 0 4px rgba(46, 196, 182, 0.2); }
+.btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08); }
 .btn:active { transform: scale(0.98); }
 
 .btn-primary {
@@ -201,12 +202,14 @@ p { color: var(--text-secondary); margin-bottom: var(--space-4); }
 }
 
 .btn-brand {
-    background: var(--gradient-primary);
+    background: var(--brand-teal-deep);
     color: white;
+    border: 1px solid rgba(255,255,255,0.08);
 }
 .btn-brand:hover {
+    background: #0a4f5e;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(46, 196, 182, 0.3);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-danger {

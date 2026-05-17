@@ -103,22 +103,99 @@
             padding: var(--space-2);
             color: var(--text-secondary);
             transition: color var(--transition-fast);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
         }
         
         .notification-bell:hover {
             color: var(--text-primary);
+            border-color: var(--border-strong);
         }
 
         .notification-badge {
             position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 8px;
-            height: 8px;
-            background: var(--brand-aqua);
+            top: 6px;
+            right: 6px;
+            width: 7px;
+            height: 7px;
+            background: #10B981;
             border-radius: var(--radius-full);
-            border: 2px solid var(--bg-surface);
+            border: 2px solid var(--bg-base);
         }
+
+        /* Notification Dropdown Panel */
+        .notification-dropdown {
+            width: 360px;
+            max-height: 480px;
+            overflow-y: auto;
+            padding: 0;
+            border-radius: var(--radius-dropdown);
+            border: 1px solid var(--border-default);
+            box-shadow: var(--shadow-lg);
+            background: var(--bg-elevated);
+            animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .notif-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background var(--transition-fast);
+            cursor: default;
+        }
+
+        .notif-item:last-child { border-bottom: none; }
+
+        .notif-item:hover { background: var(--bg-hover); }
+
+        .notif-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            color: var(--text-secondary);
+        }
+
+        .notif-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .notif-empty i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 10px;
+            opacity: 0.4;
+        }
+
     </style>
     @stack('styles')
 </head>
@@ -158,9 +235,24 @@
                 </button>
 
                 @auth
-                <div class="notification-bell d-none d-md-block">
-                    <i class="bi bi-bell fs-5"></i>
-                    <span class="notification-badge"></span>
+                <div class="dropdown d-none d-md-block">
+                    <div class="notification-bell" id="notifBell" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Notifications">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span class="notification-badge" id="notifDot" style="display:none;"></span>
+                    </div>
+                    <div class="dropdown-menu dropdown-menu-end notification-dropdown" id="notifDropdown">
+                        <div class="notif-header">
+                            <span class="fw-bold" style="font-size: 0.95rem; color: var(--text-primary);">Notifications</span>
+                            <span class="text-small" style="color: var(--text-muted);" id="notifCount">—</span>
+                        </div>
+                        <div id="notif-list">
+                            <div class="notif-empty">
+                                <i class="bi bi-bell-slash"></i>
+                                <div class="fw-medium" style="font-size: 0.9rem;">No notifications</div>
+                                <div class="text-small mt-1">You're all caught up!</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 @endauth
 
@@ -236,6 +328,28 @@
                 </div>
             </div>
         @endif
+
+        @php
+            // Fetch recent bookings for notifications (last 5, upcoming or recent)
+            $notifBookings = \App\Models\Booking::where('user_id', auth()->user()->_id)
+                ->whereIn('status', ['confirmed', 'cancelled'])
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->with(['parkingLot:id,name'])
+                ->get()
+                ->map(fn($b) => [
+                    'id'       => (string) $b->_id,
+                    'lot'      => $b->parkingLot->name ?? 'Parking Spot',
+                    'date'     => $b->date,
+                    'slot'     => $b->time_slot_id,
+                    'status'   => $b->status,
+                    'pay'      => $b->payment_status ?? 'unknown',
+                    'price'    => $b->price,
+                ]);
+        @endphp
+        <script>
+            window.__notifBookings = @json($notifBookings);
+        </script>
     @endauth
 
     <!-- Scripts -->
@@ -397,6 +511,75 @@
                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
             }).finally(() => window.location.href = '/');
         }
+
+        // ── Notification Bell ──────────────────────────────────────────────
+        function loadNotifications() {
+            const list    = document.getElementById('notif-list');
+            const dot     = document.getElementById('notifDot');
+            const counter = document.getElementById('notifCount');
+            if (!list) return;
+
+            const bookings = window.__notifBookings || [];
+
+            if (!bookings.length) {
+                counter.textContent = 'Empty';
+                return; // keep empty state
+            }
+
+            counter.textContent = bookings.length + ' recent';
+            dot.style.display = 'block'; // show badge
+
+            const statusMeta = {
+                confirmed:  { icon: 'bi-calendar-check',  label: 'Booking Confirmed' },
+                cancelled:  { icon: 'bi-calendar-x',      label: 'Booking Cancelled'  },
+            };
+
+            list.innerHTML = bookings.map(b => {
+                const meta   = statusMeta[b.status] || { icon: 'bi-calendar', label: 'Booking' };
+                const isCancel = b.status === 'cancelled';
+
+                // Format date nicely
+                let dateStr = b.date;
+                try { dateStr = new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); } catch(e) {}
+
+                // Format slot
+                const slotStr = b.slot || '';
+
+                return `
+                <div class="notif-item">
+                    <div class="notif-icon">
+                        <i class="bi ${meta.icon}"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="fw-semibold text-truncate" style="font-size: 0.875rem; color: var(--text-primary);">${b.lot}</div>
+                        <div class="text-small text-truncate" style="color: var(--text-secondary);">${meta.label} &middot; ${dateStr}</div>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <span style="font-size: 0.78rem; color: var(--text-muted);">${slotStr}</span>
+                            <span style="
+                                font-size: 0.72rem;
+                                font-weight: 600;
+                                padding: 1px 7px;
+                                border-radius: 99px;
+                                background: ${isCancel ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)'};
+                                color: ${isCancel ? '#EF4444' : '#10B981'};
+                            ">${b.status.charAt(0).toUpperCase() + b.status.slice(1)}</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">₹${b.price || '—'}</div>
+                </div>`;
+            }).join('');
+
+            // Footer link
+            list.innerHTML += `
+                <a href="/dashboard" class="d-block text-center py-3" style="font-size: 0.85rem; font-weight: 600; color: var(--brand-aqua); text-decoration: none; border-top: 1px solid var(--border-subtle);">
+                    View all in Dashboard &rarr;
+                </a>`;
+        }
+
+        // Call after DOM ready (data is already embedded in page)
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNotifications();
+        });
     </script>
     @stack('scripts')
 </body>
