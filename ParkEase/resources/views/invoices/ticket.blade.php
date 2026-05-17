@@ -178,8 +178,9 @@
         <table>
             <tr>
                 <td style="width: 50%;">
-                    <h1 class="brand">ParkEase</h1>
+                    <h1 class="brand"><span style="color: #1e3a8a;">Park</span><span style="color: #3b82f6;">Ease</span></h1>
                     <p class="brand-subtitle">Smart & Cost-Effective Parking</p>
+
                 </td>
                 <td class="invoice-details">
                     <h2 class="invoice-title">PARKING TICKET</h2>

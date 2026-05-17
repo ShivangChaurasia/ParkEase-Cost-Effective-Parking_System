@@ -57,8 +57,32 @@
             letter-spacing: -0.02em;
         }
 
-        .navbar-brand span {
+        .brand-typewriter {
+            display: inline-flex;
+            align-items: center;
+            min-width: 140px; /* Prevent layout shift during typing */
+        }
+
+        .brand-park {
+            color: var(--text-primary) !important;
+            transition: color var(--transition-base);
+        }
+
+        .brand-ease {
+            color: var(--brand-aqua) !important;
+            transition: color var(--transition-base);
+        }
+
+        .typewriter-cursor {
             color: var(--brand-aqua);
+            animation: cursor-blink 0.8s infinite;
+            font-weight: 400;
+            margin-left: 2px;
+        }
+
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
 
         .nav-link {
@@ -213,7 +237,10 @@
         <div class="container">
             <div class="d-flex align-items-center">
                 <a class="navbar-brand me-5" href="/">
-                    <img src="/images/favicon.png" alt="Logo" style="width: 50px; height: 50px;"><span>Park<span>Ease</span></span>
+                    <img src="/images/favicon.png" alt="Logo" style="width: 50px; height: 50px;">
+                    <span class="brand-typewriter">
+                        <span class="brand-park">Park</span><span class="brand-ease">Ease</span>
+                    </span>
                 </a>
                 
                 <div class="collapse navbar-collapse" id="navbarNav">
@@ -273,9 +300,11 @@
 
     <footer class="py-5 mt-auto" style="background: var(--bg-surface); border-top: 1px solid var(--border-default);">
         <div class="container text-center">
-            <h3 class="fw-bold mb-3 d-flex align-items-center justify-content-center gap-2">
+            <h3 class="fw-bold mb-3 d-flex align-items-center justify-content-center gap-2" style="font-size: 1.8rem; letter-spacing: -0.02em;">
                 <img src="/images/favicon.png" alt="Logo" style="width: 40px; height: 40px;">
-                <span>Park<span style="color: var(--brand-aqua);">Ease</span></span>
+                <span class="brand-typewriter">
+                    <span class="brand-park">Park</span><span class="brand-ease">Ease</span>
+                </span>
             </h3>
             <p class="text-muted text-small mb-4">Intelligent urban SaaS for smart mobility.</p>
             <div class="d-flex justify-content-center gap-4 mb-4">
@@ -579,6 +608,50 @@
         // Call after DOM ready (data is already embedded in page)
         document.addEventListener('DOMContentLoaded', () => {
             loadNotifications();
+
+            // ── Brand Typewriter Typing Loop ───────────────────────────────
+            const targets = document.querySelectorAll('.brand-typewriter');
+            targets.forEach(target => {
+                const textPark = "Park";
+                const textEase = "Ease";
+                let isDeleting = false;
+                let charIndex = textPark.length + textEase.length; // Start fully typed to prevent layout shift
+                let pauseTimer = null;
+
+                function type() {
+                    const totalLength = textPark.length + textEase.length;
+                    
+                    let currentPark = "";
+                    let currentEase = "";
+
+                    if (charIndex <= textPark.length) {
+                        currentPark = textPark.substring(0, charIndex);
+                    } else {
+                        currentPark = textPark;
+                        currentEase = textEase.substring(0, charIndex - textPark.length);
+                    }
+
+                    target.innerHTML = `
+                        <span class="brand-park">${currentPark}</span><span class="brand-ease">${currentEase}</span><span class="typewriter-cursor">|</span>
+                    `;
+
+                    let delay = isDeleting ? 75 : 150;
+
+                    if (!isDeleting && charIndex === totalLength) {
+                        isDeleting = true;
+                        delay = 3500; // Keep fully typed visible for 3.5 seconds
+                    } else if (isDeleting && charIndex === 0) {
+                        isDeleting = false;
+                        delay = 500;  // Pause at empty for 0.5s before re-typing
+                    }
+
+                    charIndex = isDeleting ? charIndex - 1 : charIndex + 1;
+                    pauseTimer = setTimeout(type, delay);
+                }
+
+                // Initial trigger
+                setTimeout(type, 1000);
+            });
         });
     </script>
     @stack('scripts')
