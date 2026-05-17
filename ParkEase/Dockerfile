@@ -17,9 +17,10 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # ── PHP extensions ─────────────────────────────────────────────────────────
-RUN pecl install mongodb-1.20.1 \
+RUN pecl install mongodb \
     && docker-php-ext-enable mongodb \
     && docker-php-ext-install zip
+
 
 # ── PHP production config ──────────────────────────────────────────────────
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
