@@ -202,4 +202,17 @@ Since we are using MongoDB, data is stored in document collections. We use Larav
 - **AI Analytics:** Predicting parking demand based on historical data.
 
 ---
+
+## 👥 Project Contributors
+
+We are extremely proud of the hard work and dedication that went into building **ParkEase**. Meet the team:
+
+| Contributor | GitHub Profile | Email | Portfolio |
+| :--- | :--- | :--- | :--- |
+| **Shivang Chaurasia** | [🖥️ ShivangChaurasia](https://github.com/ShivangChaurasia) | [📧 shiva17ng@gmail.com](mailto:shiva17ng@gmail.com) | [🌐 Portfolio Website](https://shivangchaurasia.vercel.app/) |
+| **Himanshu Shekhar** | [🖥️ himanshushekharon](https://github.com/himanshushekharon) | [📧 himanshushekharon@gmail.com](mailto:himanshushekharon@gmail.com) | [🌐 Portfolio Website](https://portfolio-pes-black.vercel.app/) |
+| **Riya** | [🖥️ briya1597](https://github.com/briya1597) | [📧 briya1597@gmail.com](mailto:briya1597@gmail.com) | [🌐 Portfolio Website](https://riyacse.vercel.app/) |
+
+---
+
 *This README serves as the master specification for the development team to ensure all modules align with the core business logic.*
