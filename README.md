@@ -1,6 +1,20 @@
 # 🚗 ParkEase – Smart Cost-Effective Parking Booking System
 
+<div align="center">
+  <a href="https://parkease-3as5.onrender.com/" target="_blank">
+    <img src="https://img.shields.io/badge/Live_Demo-Visit_ParkEase-0E5E6F?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo">
+  </a>
+  <a href="https://github.com/ShivangChaurasia/ParkEase-Cost-Effective-Parking_System">
+    <img src="https://img.shields.io/badge/Project_Status-Completed-success?style=for-the-badge&logo=checkmarx&logoColor=white" alt="Project Status">
+  </a>
+</div>
+
 Welcome to **ParkEase**! This is a comprehensive, movie-ticket-style parking booking platform where users can easily find nearby registered parking areas and book parking slots in advance.
+
+> [!NOTE]
+> **Project Status: Completed & Deployed**
+> The active development phase of ParkEase is officially complete. The fully functional, production-ready application has been successfully deployed to Render. The code is archived in its current finalized state, and no further updates are planned.
+
 
 ## 🎯 The Problem & Our Solution
 Finding a parking spot in busy areas leads to traffic congestion, fuel wastage, and frustration. Existing "smart parking" solutions rely heavily on expensive IoT sensors and external APIs for live availability, making them costly to implement and maintain.
@@ -137,6 +151,48 @@ Since we are using MongoDB, data is stored in document collections. We use Larav
 - `status` (Enum: 'success', 'failed', 'pending')
 - `reference_id` (String - links to UPI Ref or Booking ID)
 - `timestamps`
+
+---
+
+## 📸 Interface Showcase
+
+<div align="center">
+  <h3>✨ Premium Glassmorphism Interface ✨</h3>
+  
+  <p align="center">
+    <img src="ParkEase/public/Project_SS/image1.png" width="90%" alt="ParkEase Dashboard Preview">
+  </p>
+  
+  <br>
+  
+  <p align="center">
+    <img src="ParkEase/public/Project_SS/image2.png" width="48%" alt="ParkEase Feature Grid">
+    <img src="ParkEase/public/Project_SS/image3.png" width="48%" alt="ParkEase Screen Flow">
+  </p>
+
+  <br>
+
+  <p align="center">
+    <img src="ParkEase/public/Project_SS/image4.png" width="48%" alt="ParkEase Booking Interface">
+    <img src="ParkEase/public/Project_SS/image5.png" width="48%" alt="ParkEase Payment Interface">
+  </p>
+
+  <br>
+
+  <p align="center">
+    <img src="ParkEase/public/Project_SS/image6.png" width="31%" alt="ParkEase Map Discovery">
+    <img src="ParkEase/public/Project_SS/image7.png" width="31%" alt="ParkEase Profile Dashboard">
+    <img src="ParkEase/public/Project_SS/image8.png" width="31%" alt="ParkEase Receipt and Tickets">
+  </p>
+
+  <br>
+
+  <h4>👥 User & Host Perspectives</h4>
+  <p align="center">
+    <img src="ParkEase/public/images/user_app_screenshot.png" width="48%" alt="User Dashboard">
+    <img src="ParkEase/public/images/host_app_screenshot.png" width="48%" alt="Host Dashboard">
+  </p>
+</div>
 
 ---
 

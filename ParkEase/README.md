@@ -3,6 +3,15 @@
   <h1>ParkEase: Smart Mobility Operating System</h1>
   <p><strong>A Premium, Real-time Parking Management Ecosystem</strong></p>
 
+  <a href="https://parkease-3as5.onrender.com/" target="_blank">
+    <img src="https://img.shields.io/badge/Live_Demo-Visit_ParkEase-0E5E6F?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo">
+  </a>
+  <a href="https://github.com/ShivangChaurasia/ParkEase-Cost-Effective-Parking_System">
+    <img src="https://img.shields.io/badge/Project_Status-Completed-success?style=for-the-badge&logo=checkmarx&logoColor=white" alt="Project Status">
+  </a>
+
+  <br><br>
+
   [![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
   [![MongoDB](https://img.shields.io/badge/MongoDB-5.0+-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com)
   [![Clerk](https://img.shields.io/badge/Clerk-Auth-6C47FF?style=for-the-badge&logo=clerk&logoColor=white)](https://clerk.com)
@@ -15,6 +24,10 @@
 ParkEase is a sophisticated, SaaS-grade parking management platform designed to streamline urban mobility. It transitions from traditional parking solutions into a **Real-time Operating System** for both users looking for space and hosts managing their inventory.
 
 Featuring a **Premium Glassmorphism UI**, the platform emphasizes operational clarity, visual excellence, and a seamless end-to-end booking lifecycle.
+
+> [!NOTE]
+> **Project Status: Completed & Deployed**
+> The active development phase of ParkEase is officially complete. The fully functional, production-ready application has been successfully deployed to Render. The code is archived in its current finalized state, and no further updates are planned.
 
 ---
 
@@ -93,12 +106,50 @@ RAZORPAY_SECRET=...
 php artisan serve
 ```
 
+### 🌐 Live Production Demo
+The application is pre-configured for production deployment (using the optimized Docker environment) and is live at:
+👉 **[ParkEase Live Demo](https://parkease-3as5.onrender.com/)**
+
 ---
 
-## 📸 Screenshots
+## 📸 Interface Showcase
+
 <div align="center">
-  <img src="public/images/user_app_screenshot.png" width="45%" alt="User Dashboard">
-  <img src="public/images/host_app_screenshot.png" width="45%" alt="Host Dashboard">
+  <h3>✨ Premium Glassmorphism Interface ✨</h3>
+  
+  <p align="center">
+    <img src="public/Project_SS/image1.png" width="90%" alt="ParkEase Dashboard Preview">
+  </p>
+  
+  <br>
+  
+  <p align="center">
+    <img src="public/Project_SS/image2.png" width="48%" alt="ParkEase Feature Grid">
+    <img src="public/Project_SS/image3.png" width="48%" alt="ParkEase Screen Flow">
+  </p>
+
+  <br>
+
+  <p align="center">
+    <img src="public/Project_SS/image4.png" width="48%" alt="ParkEase Booking Interface">
+    <img src="public/Project_SS/image5.png" width="48%" alt="ParkEase Payment Interface">
+  </p>
+
+  <br>
+
+  <p align="center">
+    <img src="public/Project_SS/image6.png" width="31%" alt="ParkEase Map Discovery">
+    <img src="public/Project_SS/image7.png" width="31%" alt="ParkEase Profile Dashboard">
+    <img src="public/Project_SS/image8.png" width="31%" alt="ParkEase Receipt and Tickets">
+  </p>
+
+  <br>
+
+  <h4>👥 User & Host Perspectives</h4>
+  <p align="center">
+    <img src="public/images/user_app_screenshot.png" width="48%" alt="User Dashboard">
+    <img src="public/images/host_app_screenshot.png" width="48%" alt="Host Dashboard">
+  </p>
 </div>
 
 ---
