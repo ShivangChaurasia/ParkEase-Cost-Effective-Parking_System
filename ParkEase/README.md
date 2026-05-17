@@ -3,6 +3,8 @@
   <h1>ParkEase: Smart Mobility Operating System</h1>
   <p><strong>A Premium, Real-time Parking Management Ecosystem</strong></p>
 
+  <p>🚀 <strong>Live Production Link:</strong> <a href="https://parkease-3as5.onrender.com/" target="_blank"><strong>https://parkease-3as5.onrender.com/</strong></a></p>
+
   <a href="https://parkease-3as5.onrender.com/" target="_blank">
     <img src="https://img.shields.io/badge/Live_Demo-Visit_ParkEase-0E5E6F?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo">
   </a>
@@ -108,7 +110,7 @@ php artisan serve
 
 ### 🌐 Live Production Demo
 The application is pre-configured for production deployment (using the optimized Docker environment) and is live at:
-👉 **[ParkEase Live Demo](https://parkease-3as5.onrender.com/)**
+👉 **[https://parkease-3as5.onrender.com/](https://parkease-3as5.onrender.com/)**
 
 ---
 
