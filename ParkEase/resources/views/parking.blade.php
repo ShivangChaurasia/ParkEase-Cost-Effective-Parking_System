@@ -368,11 +368,27 @@
         const timeSlotId = document.getElementById('timeSlot').value;
         if (!date) return alert("Please select a date");
 
+        const container = document.getElementById('slotGridContainer');
+
+        if (isSlotExpired(date, timeSlotId)) {
+            alert("This parking slot time has already passed. Please select a future time slot.");
+            selectedSlots = [];
+            container.innerHTML = `
+                <div class="text-center py-5 w-100 grid-message" style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.2); border-radius: 16px; margin-top: 15px;">
+                    <i class="bi bi-calendar-x fs-1 text-danger opacity-70 mb-3 d-block"></i>
+                    <h6 class="fw-bold text-danger">Selected Slot Time Has Passed</h6>
+                    <p class="small text-muted mb-0">Booking slots in the past is not permitted. Please select a future date or timing window.</p>
+                </div>
+            `;
+            document.getElementById('confirmBookingBtn').disabled = true;
+            document.getElementById('bookingSummary').classList.add('d-none');
+            return;
+        }
+
         const btn = document.getElementById('checkAvailabilityBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Checking...';
 
-        const container = document.getElementById('slotGridContainer');
         container.innerHTML = Array(12).fill(0).map(() => `<div class="skeleton" style="width: 55px; height: 55px;"></div>`).join('');
 
         try {
