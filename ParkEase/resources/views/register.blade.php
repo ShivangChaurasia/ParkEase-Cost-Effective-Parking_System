@@ -312,7 +312,11 @@
             };
 
             Clerk.mountSignUp(signUpDiv, {
-                appearance: clerkAppearance
+                appearance: clerkAppearance,
+                signInForceRedirectUrl: "/dashboard",
+                signUpForceRedirectUrl: "/dashboard",
+                afterSignInUrl: "/dashboard",
+                afterSignUpUrl: "/dashboard"
             });
         }
     }

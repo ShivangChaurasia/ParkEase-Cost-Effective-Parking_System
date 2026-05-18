@@ -395,7 +395,12 @@
         }
 
         document.addEventListener("DOMContentLoaded", async function () {
-            await Clerk.load();
+            await Clerk.load({
+                signInForceRedirectUrl: "/dashboard",
+                signUpForceRedirectUrl: "/dashboard",
+                afterSignInUrl: "/dashboard",
+                afterSignUpUrl: "/dashboard"
+            });
             const authContainer = document.getElementById('nav-auth-container');
 
             if (Clerk.user) {
@@ -488,10 +493,12 @@
                         if (response.ok) {
                             sessionStorage.setItem('clerk_synced', 'true');
                             window.location.reload();
+                            return; // PREVENT execution of renderClerkComponent before reload completes
                         } else {
                             // If sync fails (e.g. CSRF token mismatch), force a hard logout
                             await Clerk.signOut();
                             window.location.href = '/login';
+                            return;
                         }
                     } catch (e) { 
                         console.error(e); 
