@@ -300,10 +300,60 @@
         </div>
     </div>
 </div>
+
+<!-- Premium Alert Modal -->
+<div class="modal fade" id="customAlertModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden" style="background: rgba(255, 255, 255, 0.95);">
+            <div class="p-5 text-center">
+                <div class="alert-icon-wrapper mb-4 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                    <i class="bi bi-exclamation-triangle fs-1"></i>
+                </div>
+                <h4 class="fw-bold mb-2 text-dark" id="customAlertTitle">Alert</h4>
+                <p class="text-secondary mb-4" id="customAlertMessage">Something went wrong.</p>
+                <button class="btn btn-dark w-100 py-3 rounded-4 fw-bold shadow-sm" data-bs-dismiss="modal">Acknowledge</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
+    let customAlertCallback = null;
+    function showCustomAlert(title, message, isWarning = true, callback = null) {
+        document.getElementById('customAlertTitle').innerText = title;
+        document.getElementById('customAlertMessage').innerText = message;
+        
+        const iconWrapper = document.querySelector('.alert-icon-wrapper');
+        const icon = iconWrapper.querySelector('i');
+        
+        if (isWarning) {
+            iconWrapper.style.background = 'rgba(239, 68, 68, 0.1)';
+            iconWrapper.style.color = '#ef4444';
+            icon.className = 'bi bi-exclamation-triangle fs-1';
+        } else {
+            iconWrapper.style.background = 'rgba(16, 185, 129, 0.1)';
+            iconWrapper.style.color = '#10b981';
+            icon.className = 'bi bi-check-circle fs-1';
+        }
+        
+        customAlertCallback = callback;
+        const modal = new bootstrap.Modal(document.getElementById('customAlertModal'));
+        modal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('customAlertModal');
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                if (typeof customAlertCallback === 'function') {
+                    customAlertCallback();
+                    customAlertCallback = null;
+                }
+            });
+        }
+    });
     function getISTDateTime() {
         const now = new Date();
         const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -366,12 +416,12 @@
     async function loadSlots() {
         const date = document.getElementById('bookingDate').value;
         const timeSlotId = document.getElementById('timeSlot').value;
-        if (!date) return alert("Please select a date");
+        if (!date) return showCustomAlert("Select Date", "Please select a booking date to check availability.", true);
 
         const container = document.getElementById('slotGridContainer');
 
         if (isSlotExpired(date, timeSlotId)) {
-            alert("This parking slot time has already passed. Please select a future time slot.");
+            showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true);
             selectedSlots = [];
             container.innerHTML = `
                 <div class="text-center py-5 w-100 grid-message" style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.2); border-radius: 16px; margin-top: 15px;">
@@ -514,7 +564,7 @@
         const date = document.getElementById('bookingDate').value;
         const timeSlotId = document.getElementById('timeSlot').value;
         if (isSlotExpired(date, timeSlotId)) {
-            alert("This parking slot time has already passed. Please select a future time slot.");
+            showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true);
             return;
         }
         const bookingData = {

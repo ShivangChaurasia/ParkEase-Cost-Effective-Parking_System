@@ -165,12 +165,59 @@
     @keyframes icon-line-tip { 0% { width: 0; left: 1px; top: 19px; } 54% { width: 0; left: 1px; top: 19px; } 70% { width: 50px; left: -8px; top: 37px; } 84% { width: 17px; left: 21px; top: 48px; } 100% { width: 25px; left: 14px; top: 46px; } }
     @keyframes icon-line-long { 0% { width: 0; right: 46px; top: 54px; } 65% { width: 0; right: 46px; top: 54px; } 84% { width: 55px; right: 0px; top: 35px; } 100% { width: 47px; right: 8px; top: 38px; } }
 </style>
+<!-- Premium Alert Modal -->
+<div class="modal fade" id="customAlertModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden" style="background: rgba(255, 255, 255, 0.95);">
+            <div class="p-5 text-center">
+                <div class="alert-icon-wrapper mb-4 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                    <i class="bi bi-exclamation-triangle fs-1"></i>
+                </div>
+                <h4 class="fw-bold mb-2 text-dark" id="customAlertTitle">Alert</h4>
+                <p class="text-secondary mb-4" id="customAlertMessage">Something went wrong.</p>
+                <button class="btn btn-dark w-100 py-3 rounded-4 fw-bold shadow-sm" data-bs-dismiss="modal">Acknowledge</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+    let customAlertCallback = null;
+    function showCustomAlert(title, message, isWarning = true, callback = null) {
+        document.getElementById('customAlertTitle').innerText = title;
+        document.getElementById('customAlertMessage').innerText = message;
+        
+        const iconWrapper = document.querySelector('.alert-icon-wrapper');
+        const icon = iconWrapper.querySelector('i');
+        
+        if (isWarning) {
+            iconWrapper.style.background = 'rgba(239, 68, 68, 0.1)';
+            iconWrapper.style.color = '#ef4444';
+            icon.className = 'bi bi-exclamation-triangle fs-1';
+        } else {
+            iconWrapper.style.background = 'rgba(16, 185, 129, 0.1)';
+            iconWrapper.style.color = '#10b981';
+            icon.className = 'bi bi-check-circle fs-1';
+        }
+        
+        customAlertCallback = callback;
+        const modal = new bootstrap.Modal(document.getElementById('customAlertModal'));
+        modal.show();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('customAlertModal');
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                if (typeof customAlertCallback === 'function') {
+                    customAlertCallback();
+                    customAlertCallback = null;
+                }
+            });
+        }
         function getISTDateTime() {
             const now = new Date();
             const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -219,8 +266,9 @@
         }
 
         if (isSlotExpired(bookingData.date, bookingData.time_slot_id)) {
-            alert("This parking slot time has already passed. Please select a future time slot.");
-            window.location.href = '/parking/{{ $lot->_id }}';
+            showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true, function() {
+                window.location.href = '/parking/{{ $lot->_id }}';
+            });
             return;
         }
 
@@ -256,13 +304,14 @@
             const vehicle = document.getElementById('cust_vehicle').value.trim();
 
             if (!name || !email || !phone || !vehicle) {
-                alert('Please fill in all the required customer fields (including phone and vehicle registration number).');
+                showCustomAlert("Missing Fields", "Please fill in all the required customer fields (including phone and vehicle registration number).", true);
                 return;
             }
 
             if (isSlotExpired(date, time)) {
-                alert("This parking slot time has already passed. Please select a future time slot.");
-                window.location.href = `/parking/${bookingData.lot_id}`;
+                showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true, function() {
+                    window.location.href = `/parking/${bookingData.lot_id}`;
+                });
                 return;
             }
 
@@ -371,13 +420,13 @@
                                 successModal.show();
                             } else {
                                 const err = await verifyResponse.json();
-                                alert('Error confirming booking: ' + (err.message || 'Verification failed'));
+                                showCustomAlert("Verification Error", 'Error confirming booking: ' + (err.message || 'Verification failed'), true);
                                 btn.disabled = false;
                                 btn.innerHTML = 'Pay & Confirm Booking';
                             }
                         } catch (err) {
                             console.error(err);
-                            alert('Failed to communicate with server. Contact support if amount was deducted.');
+                            showCustomAlert("Server Error", 'Failed to communicate with server. Contact support if amount was deducted.', true);
                             btn.disabled = false;
                             btn.innerHTML = 'Pay & Confirm Booking';
                         }
@@ -402,7 +451,7 @@
                 
                 const rzp1 = new Razorpay(options);
                 rzp1.on('payment.failed', function (response){
-                    alert("Payment Failed: " + response.error.description);
+                    showCustomAlert("Payment Failed", response.error.description, true);
                     btn.disabled = false;
                     btn.innerHTML = 'Pay & Confirm Booking';
                 });
@@ -410,7 +459,7 @@
 
             } catch (err) {
                 console.error(err);
-                alert(err.message || 'Payment initialization failed. Please try again.');
+                showCustomAlert("Initialization Failed", err.message || 'Payment initialization failed. Please try again.', true);
                 btn.disabled = false;
                 btn.innerHTML = 'Pay & Confirm Booking';
             }
