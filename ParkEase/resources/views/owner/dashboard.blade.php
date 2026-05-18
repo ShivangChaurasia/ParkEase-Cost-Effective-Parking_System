@@ -190,6 +190,7 @@
                     @endif
             </div>
         </div>
+    </div>
 
         <!-- Attendance & Scanner -->
         <div class="tab-pane fade" id="attendance" role="tabpanel">
