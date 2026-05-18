@@ -467,6 +467,14 @@
                     }
                 @endauth
 
+                // Safe Auth Redirect Logic: If authenticated on both, prevent viewing login/register
+                const currentPath = window.location.pathname;
+                if (isLaravelAuth && (currentPath === '/login' || currentPath === '/register')) {
+                    console.log("[Auth] User authenticated on Clerk & Laravel. Redirecting to /dashboard.");
+                    window.location.href = '/dashboard';
+                    return;
+                }
+
                 // If Clerk says logged in, but Laravel is not, force sync by clearing the flag
                 if (!isLaravelAuth) {
                     sessionStorage.removeItem('clerk_synced');
@@ -474,7 +482,9 @@
 
                 // Sync Logic
                 if (!sessionStorage.getItem('clerk_synced')) {
+                    console.log("[Auth] Sync needed. Fetching Clerk session token...");
                     const token = await Clerk.session.getToken();
+                    console.log("[Auth] Clerk token fetched. Syncing session with Laravel backend...");
                     try {
                         const response = await fetch('/api/auth/clerk-sync', {
                             method: 'POST',
@@ -491,17 +501,22 @@
                             })
                         });
                         if (response.ok) {
+                            console.log("[Auth] Session synced successfully. Reloading...");
                             sessionStorage.setItem('clerk_synced', 'true');
                             window.location.reload();
                             return; // PREVENT execution of renderClerkComponent before reload completes
                         } else {
+                            console.error("[Auth] Session sync failed on backend with status: " + response.status);
+                            const errBody = await response.text();
+                            console.error("[Auth] Sync response body: " + errBody);
+                            
                             // If sync fails (e.g. CSRF token mismatch), force a hard logout
                             await Clerk.signOut();
                             window.location.href = '/login';
                             return;
                         }
                     } catch (e) { 
-                        console.error(e); 
+                        console.error("[Auth] Connection error during session sync: ", e); 
                     }
                 }
             } else {
