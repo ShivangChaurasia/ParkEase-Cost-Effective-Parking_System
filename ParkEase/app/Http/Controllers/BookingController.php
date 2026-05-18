@@ -23,6 +23,15 @@ class BookingController extends Controller
             'time_slot_id' => 'required|string',
         ]);
 
+        // Auto-exclude expired slots for today's date
+        $times = explode('-', $validated['time_slot_id']);
+        $startTimeStr = trim($times[0]);
+        $slotDateTime = \Carbon\Carbon::parse($validated['date'] . ' ' . $startTimeStr, 'Asia/Kolkata');
+
+        if ($slotDateTime->isPast()) {
+            return response()->json(['slots' => []]);
+        }
+
         $slots = Slot::where('parking_lot_id', $parkingLotId)
             ->select(['_id', 'slot_number', 'vehicle_type', 'row', 'column'])
             ->get();
@@ -66,6 +75,26 @@ class BookingController extends Controller
             'razorpay_order_id' => 'required_if:payment_method,razorpay|string|nullable',
             'razorpay_signature' => 'required_if:payment_method,razorpay|string|nullable'
         ]);
+
+        // Past-Time Slot Booking Validation (Authoritative Backend Guard)
+        $times = explode('-', $validated['time_slot_id']);
+        $startTimeStr = trim($times[0]);
+        $slotDateTime = \Carbon\Carbon::parse($validated['date'] . ' ' . $startTimeStr, 'Asia/Kolkata');
+
+        if ($slotDateTime->isPast()) {
+            // Task 8: Warning logging in laravel.log
+            \Illuminate\Support\Facades\Log::warning('Manual attempt to book a past time slot.', [
+                'user_id' => Auth::id(),
+                'slot_ids' => $validated['slot_ids'],
+                'attempted_datetime' => $slotDateTime->toDateTimeString(),
+                'ip_address' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'This slot time has already passed.'
+            ], 422);
+        }
 
         // Verify Razorpay Signature only if method is razorpay
         if ($validated['payment_method'] === 'razorpay') {

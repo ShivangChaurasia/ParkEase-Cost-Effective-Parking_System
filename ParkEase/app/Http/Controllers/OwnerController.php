@@ -61,6 +61,25 @@ class OwnerController extends Controller
             'time_slot_id' => 'required|string',
         ]);
     
+        // Past-Time Slot Booking Validation (Authoritative Backend Guard)
+        $times = explode('-', $validated['time_slot_id']);
+        $startTimeStr = trim($times[0]);
+        $slotDateTime = \Carbon\Carbon::parse($validated['date'] . ' ' . $startTimeStr, 'Asia/Kolkata');
+
+        if ($slotDateTime->isPast()) {
+            \Illuminate\Support\Facades\Log::warning('Manual attempt by owner to book a past time slot.', [
+                'user_id' => Auth::id(),
+                'slot_ids' => $validated['slot_ids'],
+                'attempted_datetime' => $slotDateTime->toDateTimeString(),
+                'ip_address' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'This slot time has already passed.'
+            ], 422);
+        }
+
         $parkingLot = ParkingLot::findOrFail($validated['parking_lot_id']);
         $bookings = [];
     

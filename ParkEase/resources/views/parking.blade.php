@@ -132,6 +132,20 @@
         box-shadow: none !important;
     }
 
+    .slot-expired {
+        background: #f8fafc !important;
+        color: #cbd5e0 !important;
+        border-color: #e2e8f0 !important;
+        cursor: not-allowed !important;
+        opacity: 0.45;
+        pointer-events: none;
+    }
+
+    .slot-expired:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
     .slot-watermark {
         font-size: 0.5rem;
         text-transform: uppercase;
@@ -266,6 +280,7 @@
                     <div class="legend-item"><div class="legend-box" style="background: var(--light-blue); border: 2px solid var(--navy-blue);"></div> Available</div>
                     <div class="legend-item"><div class="legend-box" style="background: #000;"></div> Selected</div>
                     <div class="legend-item"><div class="legend-box" style="background: #f1f5f9; opacity: 0.7;"></div> Booked</div>
+                    <div class="legend-item"><div class="legend-box" style="background: #f8fafc; border: 2px dashed #cbd5e0; opacity: 0.5;"></div> Expired</div>
                 </div>
 
                 <div id="gridLoading" class="d-none text-center py-5">
@@ -289,6 +304,46 @@
 
 @push('scripts')
 <script>
+    function getISTDateTime() {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        const formatted = formatter.format(now);
+        const cleaned = formatted.replace(',', '').trim();
+        const parts = cleaned.split(' ');
+        return {
+            date: parts[0],
+            time: parts[1],
+            full: cleaned
+        };
+    }
+
+    function isSlotExpired(dateStr, timeSlotId) {
+        if (!dateStr || !timeSlotId) return false;
+        const ist = getISTDateTime();
+        
+        if (dateStr < ist.date) {
+            return true;
+        }
+        
+        if (dateStr === ist.date) {
+            const startTimeStr = timeSlotId.split('-')[0].trim();
+            const slotStartTime = startTimeStr.includes(':') ? startTimeStr + ':00' : startTimeStr;
+            if (slotStartTime < ist.time) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     const parkingId = '{{ $id }}';
     let selectedSlots = []; 
     let currentFilter = 'car';
@@ -359,16 +414,22 @@
             return;
         }
 
+        const date = document.getElementById('bookingDate').value;
+        const timeSlotId = document.getElementById('timeSlot').value;
+        const isExpired = isSlotExpired(date, timeSlotId);
+
         container.innerHTML = filtered.map(slot => {
             const slotId = slot.id || slot._id;
             const isSelected = selectedSlots.some(s => s.id === slotId);
-            const statusClass = slot.is_booked ? 'slot-booked' : (isSelected ? 'slot-selected' : 'slot-available');
-            const onClick = slot.is_booked ? '' : `onclick="toggleSlot('${slotId}', '${slot.slot_number}', '${slot.vehicle_type}', ${prices[slot.vehicle_type]})"`;
+            const isBooked = slot.is_booked || isExpired;
+            const statusClass = isExpired ? 'slot-expired' : (slot.is_booked ? 'slot-booked' : (isSelected ? 'slot-selected' : 'slot-available'));
+            const onClick = isBooked ? '' : `onclick="toggleSlot('${slotId}', '${slot.slot_number}', '${slot.vehicle_type}', ${prices[slot.vehicle_type]})"`;
+            const tooltipAttr = isExpired ? 'title="Booking time expired"' : '';
             
             return `
-                <div class="slot-box ${statusClass}" id="slot-${slotId}" ${onClick}>
+                <div class="slot-box ${statusClass}" id="slot-${slotId}" ${onClick} ${tooltipAttr}>
                     ${slot.slot_number}
-                    <div class="slot-watermark">${slot.vehicle_type}</div>
+                    <div class="slot-watermark">${isExpired ? 'EXPIRED' : slot.vehicle_type}</div>
                 </div>
             `;
         }).join('');
