@@ -253,6 +253,10 @@ class AuthController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('[ClerkSync] Critical session sync failure.', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json(['error' => 'Authentication failed: ' . $e->getMessage()], 401);
         }
     }
