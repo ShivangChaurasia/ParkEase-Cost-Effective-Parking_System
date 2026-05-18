@@ -109,6 +109,7 @@
                         <i class="bi bi-three-dots"></i> Actions
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-premium">
+                        <li><a class="dropdown-item dropdown-item-premium" href="https://www.google.com/maps/dir/?api=1&destination={{ $booking->parkingLot->latitude }},{{ $booking->parkingLot->longitude }}" target="_blank"><i class="bi bi-geo-alt"></i> Navigate</a></li>
                         <li><a class="dropdown-item dropdown-item-premium" href="javascript:void(0)" onclick="openTicketModal('{{ $booking->_id }}', '{{ $booking->parkingLot->name }}', '{{ \Carbon\Carbon::parse($booking->date)->format('M d, Y') }}', '{{ $booking->time_slot_id }}', '{{ $booking->slot->slot_number }}', '{{ strtoupper($booking->vehicle_type ?? 'CAR') }}')"><i class="bi bi-qr-code-scan"></i> E-Ticket</a></li>
                         <li><div class="dropdown-divider dropdown-divider-premium"></div></li>
                         <li><a class="dropdown-item dropdown-item-premium" href="{{ route('invoice.view', $booking->_id) }}" target="_blank"><i class="bi bi-eye"></i> View PDF</a></li>
