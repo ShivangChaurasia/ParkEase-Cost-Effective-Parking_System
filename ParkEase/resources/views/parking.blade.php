@@ -495,11 +495,17 @@
             window.location.href = '/login';
             return;
         }
+        const date = document.getElementById('bookingDate').value;
+        const timeSlotId = document.getElementById('timeSlot').value;
+        if (isSlotExpired(date, timeSlotId)) {
+            alert("This parking slot time has already passed. Please select a future time slot.");
+            return;
+        }
         const bookingData = {
             lot_id: parkingId,
             slots: selectedSlots,
-            time_slot_id: document.getElementById('timeSlot').value,
-            date: document.getElementById('bookingDate').value
+            time_slot_id: timeSlotId,
+            date: date
         };
         sessionStorage.setItem('pending_booking', JSON.stringify(bookingData));
         window.location.href = `/checkout?lot_id=${parkingId}`;

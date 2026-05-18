@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'onboarded' => \App\Http\Middleware\EnsureOnboardingCompleted::class,
         ]);
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('bookings:update-status')->everyMinute();
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

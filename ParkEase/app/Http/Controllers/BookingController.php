@@ -70,6 +70,7 @@ class BookingController extends Controller
             'email' => 'required|email',
             'customer_name' => 'nullable|string',
             'customer_phone' => 'nullable|string',
+            'vehicle_number' => 'nullable|string|max:20',
             'payment_method' => 'required|string|in:razorpay,manual_qr',
             'razorpay_payment_id' => 'required_if:payment_method,razorpay|string|nullable',
             'razorpay_order_id' => 'required_if:payment_method,razorpay|string|nullable',
@@ -154,6 +155,16 @@ class BookingController extends Controller
                 }
             }
 
+            $now = \Carbon\Carbon::now('Asia/Kolkata');
+            $times = explode('-', $validated['time_slot_id']);
+            $start = \Carbon\Carbon::parse($validated['date'] . ' ' . trim($times[0]), 'Asia/Kolkata');
+            $end = \Carbon\Carbon::parse($validated['date'] . ' ' . trim($times[1]), 'Asia/Kolkata');
+            
+            $status = 'upcoming';
+            if ($now->greaterThanOrEqualTo($start) && $now->lessThanOrEqualTo($end)) {
+                $status = 'active';
+            }
+
             $booking = Booking::create([
                 'user_id' => $userId,
                 'booking_email' => $userEmail,
@@ -162,11 +173,12 @@ class BookingController extends Controller
                 'time_slot_id' => $validated['time_slot_id'],
                 'date' => $validated['date'],
                 'price' => $price,
-                'status' => 'confirmed',
+                'status' => $status,
                 'payment_status' => $validated['payment_method'] === 'manual_qr' ? 'pending_verification' : 'paid',
                 'booking_id' => strtoupper(Str::random(10)),
                 'customer_name' => $validated['customer_name'] ?? null,
                 'customer_phone' => $validated['customer_phone'] ?? null,
+                'vehicle_number' => $validated['vehicle_number'] ?? null,
                 'vehicle_type' => $slot->vehicle_type,
                 'payment_method' => $validated['payment_method'],
                 'razorpay_payment_id' => $validated['razorpay_payment_id'] ?? null,
