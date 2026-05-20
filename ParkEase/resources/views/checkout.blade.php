@@ -333,8 +333,12 @@
 
                 const orderDataResp = await orderResponse.json();
 
-                if (!orderResponse.ok || !orderDataResp.success) {
-                    throw new Error(orderDataResp.message || 'Failed to create order');
+                if (!orderResponse.ok || !orderDataResp.success || !orderDataResp.order_id) {
+                    throw new Error(orderDataResp.message || 'Failed to create order on server. Missing Order ID.');
+                }
+
+                if (!orderDataResp.key) {
+                    throw new Error('Razorpay Key is missing from server response. Cannot initialize payment.');
                 }
 
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Opening Secure Gateway...';
@@ -342,45 +346,9 @@
                 // Step 2: Initialize Premium Razorpay Checkout
                 const options = {
                     "key": orderDataResp.key, // The Key ID generated from the Dashboard
-                    "amount": orderDataResp.amount, // Amount is in currency subunits. Default currency is INR.
-                    "currency": orderDataResp.currency,
                     "name": "ParkEase Premium",
                     "description": "Secure Parking Reservation",
-                    "image": "/favicon.ico", // You can replace with your logo URL
                     "order_id": orderDataResp.order_id, // This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-                    
-                    // Premium UI Configuration: UPI First
-                    "config": {
-                        "display": {
-                            "blocks": {
-                                "upi": {
-                                    "name": "Recommended: Pay via UPI",
-                                    "instruments": [
-                                        { "method": "upi" },
-                                        { "method": "upi", "provider": "google_pay" },
-                                        { "method": "upi", "provider": "phonepe" },
-                                        { "method": "upi", "provider": "paytm" }
-                                    ]
-                                },
-                                "other": {
-                                    "name": "Other Payment Modes",
-                                    "instruments": [
-                                        { "method": "card" },
-                                        { "method": "netbanking" },
-                                        { "method": "wallet" }
-                                    ]
-                                }
-                            },
-                            "hide": [
-                                { "method": "emi" },
-                                { "method": "paylater" }
-                            ],
-                            "sequence": ["block.upi", "block.other"],
-                            "preferences": {
-                                "show_default_blocks": false
-                            }
-                        }
-                    },
                     "retry": {
                         "enabled": false // Let us handle failure gracefully
                     },
@@ -434,7 +402,7 @@
                     "prefill": {
                         "name": document.getElementById('cust_name').value,
                         "email": document.getElementById('cust_email').value,
-                        "contact": document.getElementById('cust_phone').value || ""
+                        "contact": (document.getElementById('cust_phone').value || "").replace(/\s+/g, '')
                     },
                     "theme": {
                         "color": "#000000" // Premium Dark Mode feel for gateway
@@ -458,7 +426,10 @@
                 rzp1.open();
 
             } catch (err) {
-                console.error(err);
+                console.error("Payment Initialization Error Payload: ", {
+                    error: err,
+                    order_response: typeof orderDataResp !== 'undefined' ? orderDataResp : null
+                });
                 showCustomAlert("Initialization Failed", err.message || 'Payment initialization failed. Please try again.', true);
                 btn.disabled = false;
                 btn.innerHTML = 'Pay & Confirm Booking';

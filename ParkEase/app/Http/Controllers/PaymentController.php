@@ -23,14 +23,19 @@ class PaymentController extends Controller
             $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
 
             // Razorpay accepts amount in paisa (for INR), so we multiply by 100
+            $amountInPaise = (int) round($request->amount * 100);
             $orderData = [
                 'receipt'         => 'rcptid_' . time(),
-                'amount'          => $request->amount * 100, 
+                'amount'          => $amountInPaise, 
                 'currency'        => $request->currency ?? 'INR',
                 'payment_capture' => 1 // auto capture
             ];
 
+            Log::info('Razorpay Order Creation Payload: ', $orderData);
+
             $razorpayOrder = $api->order->create($orderData);
+
+            Log::info('Razorpay Order Created: ', $razorpayOrder->toArray());
 
             return response()->json([
                 'success' => true,
@@ -41,7 +46,10 @@ class PaymentController extends Controller
             ]);
             
         } catch (Exception $e) {
-            Log::error('Razorpay Error: ' . $e->getMessage());
+            Log::error('Razorpay Order Creation Error: ', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to generate order ID: ' . $e->getMessage()

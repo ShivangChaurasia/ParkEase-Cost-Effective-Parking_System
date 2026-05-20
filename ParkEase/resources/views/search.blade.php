@@ -175,9 +175,13 @@
     }
 
     // API Fetch
-    let apiUrl = '/api/search?';
-    if (pincode) apiUrl += `pincode=${pincode}`;
-    if (lat && lng) apiUrl += `lat=${lat}&lng=${lng}`;
+    let apiParams = new URLSearchParams();
+    if (pincode) apiParams.append('pincode', pincode);
+    if (lat && lng) {
+        apiParams.append('lat', lat);
+        apiParams.append('lng', lng);
+    }
+    let apiUrl = '/api/search?' + apiParams.toString();
 
     fetch(apiUrl)
         .then(res => res.json())
