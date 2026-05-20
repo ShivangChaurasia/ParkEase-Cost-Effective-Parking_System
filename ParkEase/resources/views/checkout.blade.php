@@ -45,21 +45,21 @@
                     <div class="mb-4">
                         <h5 class="fw-bold mb-3 border-bottom pb-2">Customer Information</h5>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Full Name</label>
+                            <label for="cust_name" class="form-label small fw-bold text-muted">Full Name</label>
                             <input type="text" id="cust_name" class="form-control-premium w-100" placeholder="Enter your name" value="{{ Auth::user()->name ?? '' }}">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Email Address</label>
+                            <label for="cust_email" class="form-label small fw-bold text-muted">Email Address</label>
                             <input type="email" id="cust_email" class="form-control-premium w-100" placeholder="name@example.com" value="{{ Auth::user()->email ?? '' }}">
                             <div class="form-text text-secondary small">Access this booking anytime using the same email.</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Phone Number <span class="text-danger">*</span></label>
+                            <label for="cust_phone" class="form-label small fw-bold text-muted">Phone Number <span class="text-danger">*</span></label>
                             <input type="tel" id="cust_phone" class="form-control-premium w-100" placeholder="10-digit mobile number" required>
                             <div class="form-text text-secondary small">Required for seamless payment experience.</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Vehicle Registration Number <span class="text-danger">*</span></label>
+                            <label for="cust_vehicle" class="form-label small fw-bold text-muted">Vehicle Registration Number <span class="text-danger">*</span></label>
                             <input type="text" id="cust_vehicle" class="form-control-premium w-100" placeholder="e.g. MH12AB1234" required style="text-transform: uppercase;">
                             <div class="form-text text-secondary small">Required for check-in verification at the parking property.</div>
                         </div>

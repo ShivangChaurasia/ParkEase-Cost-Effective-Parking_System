@@ -470,10 +470,14 @@
         document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
         document.getElementById('tab-' + type).classList.add('active');
 
-        if (allSlots.length === 0) return;
+        const container = document.getElementById('slotGridContainer');
+
+        if (allSlots.length === 0) {
+            container.innerHTML = `<p class="text-muted py-5 w-100 text-center">No slots found for this parking area.</p>`;
+            return;
+        }
 
         const filtered = allSlots.filter(s => s.vehicle_type === type);
-        const container = document.getElementById('slotGridContainer');
         
         if(filtered.length === 0) {
             container.innerHTML = `<p class="text-muted py-5 w-100 text-center">No ${type} slots available.</p>`;
