@@ -173,6 +173,18 @@
                             @foreach($parkingLots as $lot)
                                 <div class="surface-card p-3 border-0 rounded-4 mb-3">
                                     <h5 class="text-h5 mb-1">{{ $lot->name }}</h5>
+                                    @if($lot->status === 'closing_soon')
+                                        <span class="badge bg-warning text-dark mb-2"><i class="bi bi-exclamation-triangle me-1"></i>Closing Soon — {{ $lot->scheduled_removal_date }}</span>
+                                    @elseif($lot->status === 'scheduled_for_removal')
+                                        <span class="badge bg-danger mb-2"><i class="bi bi-calendar-x me-1"></i>Removal Scheduled — {{ $lot->scheduled_removal_date }}</span>
+                                    @elseif($lot->status === 'inactive')
+                                        <span class="badge bg-secondary mb-2"><i class="bi bi-pause-circle me-1"></i>Inactive</span>
+                                    @elseif($lot->status === 'permanently_removed')
+                                        <span class="badge bg-dark mb-2"><i class="bi bi-x-circle me-1"></i>Permanently Removed</span>
+                                    @endif
+                                    @if($lot->is_accepting_bookings === false && !in_array($lot->status, ['inactive', 'permanently_removed']))
+                                        <span class="badge bg-info text-dark mb-2"><i class="bi bi-pause-fill me-1"></i>Bookings Paused</span>
+                                    @endif
                                     <p class="text-muted small mb-2"><i class="bi bi-geo-alt text-primary"></i> {{ $lot->address }}, {{ $lot->city }} - {{ $lot->pincode }}</p>
                                     <div class="d-flex justify-content-between align-items-center mt-2">
                                         <div class="d-flex gap-1">
@@ -620,7 +632,7 @@
                         </td>
                         <td class="py-3 small">
                             <div>Slot: <span class="fw-bold text-primary">${slotName}</span></div>
-                            <div class="text-muted">${booking.date} | ${booking.time_slot_id}</div>
+                            <div class="text-muted">${new Date(booking.booking_start_datetime).toLocaleString('en-IN', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})} - ${new Date(booking.booking_end_datetime).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})}</div>
                         </td>
                         <td class="py-3 text-center">
                             <span class="badge ${statusBadgeClass} rounded-pill px-3 py-2 small">${booking.status.toUpperCase()}</span>
@@ -771,7 +783,7 @@
                         </tr>
                         <tr>
                             <td class="text-muted">Date & Window:</td>
-                            <td class="text-end text-muted small">${booking.date} | ${booking.time_slot}</td>
+                            <td class="text-end text-muted small">${new Date(booking.booking_start_datetime).toLocaleString('en-IN', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})} to ${new Date(booking.booking_end_datetime).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})}</td>
                         </tr>
                         <tr>
                             <td class="text-muted">Current Status:</td>

@@ -4,13 +4,52 @@
 
 @section('content')
 <div class="container py-5">
+    @if(in_array($parkingLot->status, ['scheduled_for_removal', 'closing_soon']))
+    <div class="alert {{ $parkingLot->status === 'closing_soon' ? 'alert-warning' : 'alert-danger' }} d-flex align-items-center rounded-4 mb-4 shadow-sm" role="alert">
+        <i class="bi {{ $parkingLot->status === 'closing_soon' ? 'bi-exclamation-triangle-fill' : 'bi-calendar-x-fill' }} fs-4 me-3"></i>
+        <div>
+            <strong>{{ $parkingLot->status === 'closing_soon' ? 'Closing Soon' : 'Removal Scheduled' }}:</strong>
+            This parking lot is scheduled for closure on <strong>{{ $parkingLot->scheduled_removal_date }}</strong>.
+            No new bookings will be accepted after this date.
+            @if($parkingLot->removal_reason)
+                <br><small class="text-muted">Reason: {{ $parkingLot->removal_reason }}</small>
+            @endif
+        </div>
+    </div>
+    @elseif($parkingLot->status === 'inactive')
+    <div class="alert alert-secondary d-flex align-items-center rounded-4 mb-4 shadow-sm" role="alert">
+        <i class="bi bi-pause-circle-fill fs-4 me-3"></i>
+        <div><strong>Inactive:</strong> This parking lot has been deactivated and is no longer operational.</div>
+    </div>
+    @endif
     <div class="row mb-4 align-items-center">
         <div class="col-md-6">
             <h2 class="fw-bold mb-1">{{ $parkingLot->name }}</h2>
             <p class="text-muted"><i class="bi bi-geo-alt"></i> {{ $parkingLot->address }}, {{ $parkingLot->city }}</p>
         </div>
         <div class="col-md-6 text-md-end">
-            <a href="/owner/dashboard" class="btn btn-outline-dark btn-sm">Back to Dashboard</a>
+            <div class="dropdown d-inline-block me-2">
+                <button class="btn btn-outline-dark btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-gear"></i> Settings
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center justify-content-between" href="#" id="toggleBookingsBtn">
+                            <span id="toggleBookingsText">{{ $parkingLot->is_accepting_bookings ? 'Pause Bookings' : 'Resume Bookings' }}</span>
+                            <div class="form-check form-switch mb-0 ms-3">
+                                <input class="form-check-input" type="checkbox" id="toggleBookingsSwitch" {{ $parkingLot->is_accepting_bookings ? 'checked' : '' }}>
+                            </div>
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger fw-bold" href="#" onclick="openClosureModal()"><i class="bi bi-trash me-2"></i> Schedule Closure</a></li>
+                    @if(in_array($parkingLot->status, ['scheduled_for_removal', 'closing_soon']))
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-success fw-bold" href="#" onclick="cancelClosure()"><i class="bi bi-arrow-counterclockwise me-2"></i>Cancel Scheduled Closure</a></li>
+                    @endif
+                </ul>
+            </div>
+            <a href="/owner/dashboard" class="btn btn-dark btn-sm">Back to Dashboard</a>
         </div>
     </div>
 
@@ -22,16 +61,21 @@
                     <div class="d-flex gap-3">
                         <div class="mb-0">
                             <label class="small text-muted d-block">Select Date</label>
-                            <input type="date" id="manageDate" class="form-control form-control-sm rounded-3" value="{{ date('Y-m-d') }}">
+                            <input type="date" id="manageDate" class="form-control form-control-sm rounded-3" min="{{ date('Y-m-d') }}" max="{{ \Carbon\Carbon::now('Asia/Kolkata')->addDays(7)->format('Y-m-d') }}" value="{{ date('Y-m-d') }}">
                         </div>
                         <div class="mb-0">
-                            <label class="small text-muted d-block">Time Slot</label>
-                            <select id="manageTime" class="form-select form-select-sm rounded-3">
-                                <option value="10:00-11:00">10:00 AM - 11:00 AM</option>
-                                <option value="11:00-12:00">11:00 AM - 12:00 PM</option>
-                                <option value="12:00-13:00">12:00 PM - 01:00 PM</option>
-                                <option value="13:00-14:00">01:00 PM - 02:00 PM</option>
-                                <option value="14:00-15:00">02:00 PM - 03:00 PM</option>
+                            <label class="small text-muted d-block">Start Time</label>
+                            <input type="time" id="manageTime" class="form-control form-control-sm rounded-3" value="10:00">
+                        </div>
+                        <div class="mb-0">
+                            <label class="small text-muted d-block">Duration</label>
+                            <select id="manageDuration" class="form-select form-select-sm rounded-3">
+                                <option value="30">30 mins</option>
+                                <option value="60" selected>1 hour</option>
+                                <option value="120">2 hours</option>
+                                <option value="240">4 hours</option>
+                                <option value="480">8 hours</option>
+                                <option value="1440">24 hours</option>
                             </select>
                         </div>
                     </div>
@@ -92,48 +136,93 @@
         </div>
     </div>
 </div>
+
+<!-- Closure Modal -->
+<div class="modal fade" id="closureModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-bottom-0 bg-danger text-white rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Schedule Parking Closure</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <h6 class="fw-bold mb-3">Confirm Closure</h6>
+                <p class="text-muted small">You are about to schedule this parking lot for permanent removal. All existing bookings up to the closure date will be honored, but no new bookings will be accepted past the closure date.</p>
+                
+                <div class="bg-light p-3 rounded-3 mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Active Bookings Impacted:</span>
+                        <span class="fw-bold" id="closureActiveBookings">
+                            <span class="spinner-border spinner-border-sm text-muted"></span>
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Revenue Impact:</span>
+                        <span class="fw-bold text-danger" id="closureRevenue">
+                            <span class="spinner-border spinner-border-sm text-muted"></span>
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small">Scheduled Closure Date:</span>
+                        <span class="fw-bold text-primary" id="closureDateDisplay">
+                            <span class="spinner-border spinner-border-sm text-muted"></span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Reason for closure (Optional)</label>
+                    <textarea id="closureReason" class="form-control rounded-3" rows="2"></textarea>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="closureCheckbox">
+                    <label class="form-check-label small text-muted" for="closureCheckbox">
+                        I understand that this action cannot be easily undone and my parking lot will be permanently removed on the scheduled date.
+                    </label>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-danger">Type "CONFIRM REMOVE" to proceed</label>
+                    <input type="text" id="closureConfirmText" class="form-control border-danger rounded-3" autocomplete="off">
+                </div>
+
+                <button class="btn btn-danger w-100 rounded-3 py-2 fw-bold" id="submitClosureBtn" disabled onclick="submitClosure()">Schedule Removal</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
-    function getISTDateTime() {
-        const now = new Date();
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'Asia/Kolkata',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        });
-        const formatted = formatter.format(now);
-        const cleaned = formatted.replace(',', '').trim();
-        const parts = cleaned.split(' ');
+    function getStartAndEndDateTime() {
+        const date = document.getElementById('manageDate').value;
+        const time = document.getElementById('manageTime').value;
+        const durationMins = parseInt(document.getElementById('manageDuration').value);
+        
+        if (!date || !time) return null;
+        
+        const start = new Date(`${date}T${time}:00`);
+        const end = new Date(start.getTime() + durationMins * 60000);
+        
+        const formatDt = (dt) => {
+            const pad = n => n.toString().padStart(2, '0');
+            return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:00`;
+        };
+        
         return {
-            date: parts[0],
-            time: parts[1],
-            full: cleaned
+            start_datetime: formatDt(start),
+            end_datetime: formatDt(end),
+            duration_mins: durationMins,
+            start_obj: start
         };
     }
 
-    function isSlotExpired(dateStr, timeSlotId) {
-        if (!dateStr || !timeSlotId) return false;
-        const ist = getISTDateTime();
-        
-        if (dateStr < ist.date) {
-            return true;
-        }
-        
-        if (dateStr === ist.date) {
-            const startTimeStr = timeSlotId.split('-')[0].trim();
-            const slotStartTime = startTimeStr.includes(':') ? startTimeStr + ':00' : startTimeStr;
-            if (slotStartTime < ist.time) {
-                return true;
-            }
-        }
-        return false;
+    function isSlotExpired(startObj) {
+        if (!startObj) return false;
+        const now = new Date();
+        return startObj < now;
     }
 
     const parkingId = '{{ $parkingLot->_id }}';
@@ -152,6 +241,7 @@
 
         document.getElementById('manageDate').addEventListener('change', loadSlots);
         document.getElementById('manageTime').addEventListener('change', loadSlots);
+        document.getElementById('manageDuration').addEventListener('change', loadSlots);
 
         document.getElementById('manualBookingForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -165,8 +255,12 @@
             const data = Object.fromEntries(formData.entries());
             data.parking_lot_id = parkingId;
             data.slot_ids = selectedSlots.map(s => s.id);
-            data.date = document.getElementById('manageDate').value;
-            data.time_slot_id = document.getElementById('manageTime').value;
+            const dt = getStartAndEndDateTime();
+            if (!dt) return alert("Invalid date or time.");
+            
+            data.date = document.getElementById('manageDate').value; // Keep for backward compatibility if needed
+            data.start_datetime = dt.start_datetime;
+            data.end_datetime = dt.end_datetime;
 
             try {
                 const response = await fetch('/api/owner/manual-booking', {
@@ -198,14 +292,18 @@
     });
 
     async function loadSlots() {
-        const date = document.getElementById('manageDate').value;
-        const time = document.getElementById('manageTime').value;
+        const dt = getStartAndEndDateTime();
         const container = document.getElementById('slotGridContainer');
         
+        if (!dt) {
+            container.innerHTML = '<p class="text-danger my-4">Please select a valid date and time.</p>';
+            return;
+        }
+
         container.innerHTML = '<div class="spinner-border text-dark my-4"></div>';
 
         try {
-            const res = await fetch(`/api/parking-lots/${parkingId}/slots?date=${date}&time_slot_id=${time}`);
+            const res = await fetch(`/api/parking-lots/${parkingId}/slots?start_datetime=${encodeURIComponent(dt.start_datetime)}&end_datetime=${encodeURIComponent(dt.end_datetime)}`);
             const data = await res.json();
             allSlots = data.slots || [];
             filterSlots(currentFilter);
@@ -227,9 +325,8 @@
             return;
         }
 
-        const date = document.getElementById('manageDate').value;
-        const time = document.getElementById('manageTime').value;
-        const isExpired = isSlotExpired(date, time);
+        const dt = getStartAndEndDateTime();
+        const isExpired = dt ? isSlotExpired(dt.start_obj) : false;
 
         container.innerHTML = filtered.map(slot => {
             const slotId = slot.id || slot._id;
@@ -283,7 +380,12 @@
         instructionCard.classList.add('d-none');
 
         const names = selectedSlots.map(s => `<span class="badge bg-white text-dark border me-1 mb-1">${s.name}</span>`).join('');
-        const totalPrice = selectedSlots.reduce((sum, s) => sum + prices[s.type], 0);
+        
+        const dt = getStartAndEndDateTime();
+        const durationMins = dt ? dt.duration_mins : 0;
+        const multiplier = durationMins / 60;
+        
+        const totalPrice = selectedSlots.reduce((sum, s) => sum + (prices[s.type] * multiplier), 0);
 
         document.getElementById('selectedSlotName').innerHTML = names;
         document.getElementById('displayCount').innerText = selectedSlots.length;
@@ -299,6 +401,153 @@
         document.getElementById('bookingCard').classList.add('d-none');
         document.getElementById('instructionCard').classList.remove('d-none');
         document.getElementById('manualBookingForm').reset();
+    }
+
+    // Toggle Bookings
+    document.getElementById('toggleBookingsBtn').addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const checkbox = document.getElementById('toggleBookingsSwitch');
+        const textLabel = document.getElementById('toggleBookingsText');
+        const newState = !checkbox.checked;
+        
+        checkbox.checked = newState;
+        
+        try {
+            const res = await fetch(`/api/owner/parking-lots/${parkingId}/toggle-bookings`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ is_accepting_bookings: newState })
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                textLabel.innerText = data.is_accepting_bookings ? 'Pause Bookings' : 'Resume Bookings';
+            } else {
+                alert(data.message || 'Failed to toggle bookings.');
+                checkbox.checked = !newState; // revert
+            }
+        } catch (err) {
+            console.error(err);
+            checkbox.checked = !newState; // revert
+        }
+    });
+
+    // Prevent modal close if clicking switch inside dropdown
+    document.getElementById('toggleBookingsSwitch').addEventListener('click', function(e) {
+        e.preventDefault(); // Let the a-tag handle the state via api
+    });
+
+    // Schedule Closure Flow
+    let closureModalInstance;
+    function openClosureModal() {
+        if (!closureModalInstance) {
+            closureModalInstance = new bootstrap.Modal(document.getElementById('closureModal'));
+        }
+        closureModalInstance.show();
+
+        // Reset form
+        document.getElementById('closureCheckbox').checked = false;
+        document.getElementById('closureConfirmText').value = '';
+        validateClosureForm();
+
+        // Fetch summary
+        fetch(`/api/owner/parking-lots/${parkingId}/closure-summary`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('closureActiveBookings').innerText = data.active_bookings_count;
+                document.getElementById('closureRevenue').innerText = '₹' + data.revenue_impact;
+                document.getElementById('closureDateDisplay').innerText = data.scheduled_removal_date;
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('closureActiveBookings').innerText = 'Error';
+                document.getElementById('closureRevenue').innerText = 'Error';
+                document.getElementById('closureDateDisplay').innerText = 'Error';
+            });
+    }
+
+    document.getElementById('closureCheckbox').addEventListener('change', validateClosureForm);
+    document.getElementById('closureConfirmText').addEventListener('input', validateClosureForm);
+
+    function validateClosureForm() {
+        const checkbox = document.getElementById('closureCheckbox').checked;
+        const text = document.getElementById('closureConfirmText').value.trim();
+        const btn = document.getElementById('submitClosureBtn');
+
+        if (checkbox && text === 'CONFIRM REMOVE') {
+            btn.disabled = false;
+        } else {
+            btn.disabled = true;
+        }
+    }
+
+    async function submitClosure() {
+        const btn = document.getElementById('submitClosureBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Scheduling...';
+
+        const reason = document.getElementById('closureReason').value;
+
+        try {
+            const res = await fetch(`/api/owner/parking-lots/${parkingId}/schedule-closure`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ reason: reason })
+            });
+
+            const data = await res.json();
+            
+            if (res.ok) {
+                alert('Closure scheduled successfully. Scheduled removal date: ' + data.scheduled_removal_date);
+                closureModalInstance.hide();
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+                btn.disabled = false;
+                btn.innerHTML = 'Schedule Removal';
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Something went wrong.');
+            btn.disabled = false;
+            btn.innerHTML = 'Schedule Removal';
+        }
+    }
+
+    // Cancel Closure
+    async function cancelClosure() {
+        if (!confirm('Are you sure you want to cancel the scheduled closure? This will restore the parking lot to active status.')) return;
+        
+        try {
+            const res = await fetch(`/api/owner/parking-lots/${parkingId}/cancel-closure`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Closure cancelled successfully. Parking lot is now active.');
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Something went wrong.');
+        }
     }
 </script>
 @endpush

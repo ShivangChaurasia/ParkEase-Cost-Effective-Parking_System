@@ -60,6 +60,10 @@ Route::middleware(['auth', 'onboarded'])->group(function () {
     Route::get('/owner/dashboard', [DashboardController::class, 'ownerDashboard']);
     Route::get('/owner/parking/{id}/manage', [OwnerController::class, 'manageLot']);
     Route::post('/api/owner/parking-lots', [OwnerController::class, 'storeParkingLot']);
+    Route::post('/api/owner/parking-lots/{id}/schedule-closure', [OwnerController::class, 'scheduleClosure']);
+    Route::get('/api/owner/parking-lots/{id}/closure-summary', [OwnerController::class, 'getClosureSummary']);
+    Route::post('/api/owner/parking-lots/{id}/toggle-bookings', [OwnerController::class, 'toggleAcceptingBookings']);
+    Route::post('/api/owner/parking-lots/{id}/cancel-closure', [OwnerController::class, 'cancelClosure']);
     Route::post('/api/owner/manual-booking', [OwnerController::class, 'storeManualBooking']);
     Route::get('/api/owner/bookings', [OwnerController::class, 'getBookings']);
     Route::post('/api/owner/verify-booking', [OwnerController::class, 'verifyBooking']);

@@ -240,45 +240,47 @@
             };
         }
 
-        function isSlotExpired(dateStr, timeSlotId) {
-            if (!dateStr || !timeSlotId) return false;
-            const ist = getISTDateTime();
-            
-            if (dateStr < ist.date) {
-                return true;
-            }
-            
-            if (dateStr === ist.date) {
-                const startTimeStr = timeSlotId.split('-')[0].trim();
-                const slotStartTime = startTimeStr.includes(':') ? startTimeStr + ':00' : startTimeStr;
-                if (slotStartTime < ist.time) {
-                    return true;
-                }
-            }
-            return false;
+        function isSlotExpired(startDatetime) {
+            if (!startDatetime) return false;
+            const now = new Date();
+            return new Date(startDatetime) < now;
         }
 
         // Load data from session storage (saved from parking page)
         const bookingData = JSON.parse(sessionStorage.getItem('pending_booking'));
+
+        // Checkout Session TTL (15 minutes)
+        const CHECKOUT_TTL_MS = 15 * 60 * 1000; // 15 minutes
+        if (bookingData && bookingData.created_at) {
+            const elapsed = Date.now() - bookingData.created_at;
+            if (elapsed > CHECKOUT_TTL_MS) {
+                sessionStorage.removeItem('pending_booking');
+                alert('Your checkout session has expired. Please select your slots again.');
+                window.location.href = '/search';
+                return;
+            }
+        }
+
         if (!bookingData || bookingData.lot_id !== '{{ $lot->_id }}') {
             window.location.href = '/parking/{{ $lot->_id }}';
             return;
         }
 
-        if (isSlotExpired(bookingData.date, bookingData.time_slot_id)) {
+        if (isSlotExpired(bookingData.start_datetime)) {
             showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true, function() {
                 window.location.href = '/parking/{{ $lot->_id }}';
             });
             return;
         }
 
-        const date = bookingData.date;
-        const time = bookingData.time_slot_id;
+        const startDt = new Date(bookingData.start_datetime);
+        const endDt = new Date(bookingData.end_datetime);
         const slots = bookingData.slots; // Array of {id, number, type, price}
         
         let total = 0;
 
-        document.getElementById('displayDateTime').innerText = `${date} | ${time}`;
+        const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        document.getElementById('displayDateTime').innerText = `From ${startDt.toLocaleString('en-IN', options)} to ${endDt.toLocaleString('en-IN', options)}`;
 
         const slotList = document.getElementById('slotList');
         slots.forEach(slot => {
@@ -308,7 +310,7 @@
                 return;
             }
 
-            if (isSlotExpired(date, time)) {
+            if (isSlotExpired(bookingData.start_datetime)) {
                 showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true, function() {
                     window.location.href = `/parking/${bookingData.lot_id}`;
                 });
@@ -367,8 +369,8 @@
                                 body: JSON.stringify({
                                     parking_lot_id: bookingData.lot_id,
                                     slot_ids: slots.map(s => s.id),
-                                    time_slot_id: bookingData.time_slot_id,
-                                    date: bookingData.date,
+                                    start_datetime: bookingData.start_datetime,
+                                    end_datetime: bookingData.end_datetime,
                                     vehicle_type: bookingData.vehicle_type,
                                     email: document.getElementById('cust_email').value,
                                     customer_name: document.getElementById('cust_name').value,
