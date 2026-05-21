@@ -45,21 +45,21 @@
                     <div class="mb-4">
                         <h5 class="fw-bold mb-3 border-bottom pb-2">Customer Information</h5>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Full Name</label>
+                            <label for="cust_name" class="form-label small fw-bold text-muted">Full Name</label>
                             <input type="text" id="cust_name" class="form-control-premium w-100" placeholder="Enter your name" value="{{ Auth::user()->name ?? '' }}">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Email Address</label>
+                            <label for="cust_email" class="form-label small fw-bold text-muted">Email Address</label>
                             <input type="email" id="cust_email" class="form-control-premium w-100" placeholder="name@example.com" value="{{ Auth::user()->email ?? '' }}">
                             <div class="form-text text-secondary small">Access this booking anytime using the same email.</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Phone Number <span class="text-danger">*</span></label>
+                            <label for="cust_phone" class="form-label small fw-bold text-muted">Phone Number <span class="text-danger">*</span></label>
                             <input type="tel" id="cust_phone" class="form-control-premium w-100" placeholder="10-digit mobile number" required>
                             <div class="form-text text-secondary small">Required for seamless payment experience.</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Vehicle Registration Number <span class="text-danger">*</span></label>
+                            <label for="cust_vehicle" class="form-label small fw-bold text-muted">Vehicle Registration Number <span class="text-danger">*</span></label>
                             <input type="text" id="cust_vehicle" class="form-control-premium w-100" placeholder="e.g. MH12AB1234" required style="text-transform: uppercase;">
                             <div class="form-text text-secondary small">Required for check-in verification at the parking property.</div>
                         </div>
@@ -240,45 +240,47 @@
             };
         }
 
-        function isSlotExpired(dateStr, timeSlotId) {
-            if (!dateStr || !timeSlotId) return false;
-            const ist = getISTDateTime();
-            
-            if (dateStr < ist.date) {
-                return true;
-            }
-            
-            if (dateStr === ist.date) {
-                const startTimeStr = timeSlotId.split('-')[0].trim();
-                const slotStartTime = startTimeStr.includes(':') ? startTimeStr + ':00' : startTimeStr;
-                if (slotStartTime < ist.time) {
-                    return true;
-                }
-            }
-            return false;
+        function isSlotExpired(startDatetime) {
+            if (!startDatetime) return false;
+            const now = new Date();
+            return new Date(startDatetime) < now;
         }
 
         // Load data from session storage (saved from parking page)
         const bookingData = JSON.parse(sessionStorage.getItem('pending_booking'));
+
+        // Checkout Session TTL (15 minutes)
+        const CHECKOUT_TTL_MS = 15 * 60 * 1000; // 15 minutes
+        if (bookingData && bookingData.created_at) {
+            const elapsed = Date.now() - bookingData.created_at;
+            if (elapsed > CHECKOUT_TTL_MS) {
+                sessionStorage.removeItem('pending_booking');
+                alert('Your checkout session has expired. Please select your slots again.');
+                window.location.href = '/search';
+                return;
+            }
+        }
+
         if (!bookingData || bookingData.lot_id !== '{{ $lot->_id }}') {
             window.location.href = '/parking/{{ $lot->_id }}';
             return;
         }
 
-        if (isSlotExpired(bookingData.date, bookingData.time_slot_id)) {
+        if (isSlotExpired(bookingData.start_datetime)) {
             showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true, function() {
                 window.location.href = '/parking/{{ $lot->_id }}';
             });
             return;
         }
 
-        const date = bookingData.date;
-        const time = bookingData.time_slot_id;
+        const startDt = new Date(bookingData.start_datetime);
+        const endDt = new Date(bookingData.end_datetime);
         const slots = bookingData.slots; // Array of {id, number, type, price}
         
         let total = 0;
 
-        document.getElementById('displayDateTime').innerText = `${date} | ${time}`;
+        const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        document.getElementById('displayDateTime').innerText = `From ${startDt.toLocaleString('en-IN', options)} to ${endDt.toLocaleString('en-IN', options)}`;
 
         const slotList = document.getElementById('slotList');
         slots.forEach(slot => {
@@ -308,7 +310,7 @@
                 return;
             }
 
-            if (isSlotExpired(date, time)) {
+            if (isSlotExpired(bookingData.start_datetime)) {
                 showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true, function() {
                     window.location.href = `/parking/${bookingData.lot_id}`;
                 });
@@ -333,8 +335,12 @@
 
                 const orderDataResp = await orderResponse.json();
 
-                if (!orderResponse.ok || !orderDataResp.success) {
-                    throw new Error(orderDataResp.message || 'Failed to create order');
+                if (!orderResponse.ok || !orderDataResp.success || !orderDataResp.order_id) {
+                    throw new Error(orderDataResp.message || 'Failed to create order on server. Missing Order ID.');
+                }
+
+                if (!orderDataResp.key) {
+                    throw new Error('Razorpay Key is missing from server response. Cannot initialize payment.');
                 }
 
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Opening Secure Gateway...';
@@ -342,45 +348,9 @@
                 // Step 2: Initialize Premium Razorpay Checkout
                 const options = {
                     "key": orderDataResp.key, // The Key ID generated from the Dashboard
-                    "amount": orderDataResp.amount, // Amount is in currency subunits. Default currency is INR.
-                    "currency": orderDataResp.currency,
                     "name": "ParkEase Premium",
                     "description": "Secure Parking Reservation",
-                    "image": "/favicon.ico", // You can replace with your logo URL
                     "order_id": orderDataResp.order_id, // This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-                    
-                    // Premium UI Configuration: UPI First
-                    "config": {
-                        "display": {
-                            "blocks": {
-                                "upi": {
-                                    "name": "Recommended: Pay via UPI",
-                                    "instruments": [
-                                        { "method": "upi" },
-                                        { "method": "upi", "provider": "google_pay" },
-                                        { "method": "upi", "provider": "phonepe" },
-                                        { "method": "upi", "provider": "paytm" }
-                                    ]
-                                },
-                                "other": {
-                                    "name": "Other Payment Modes",
-                                    "instruments": [
-                                        { "method": "card" },
-                                        { "method": "netbanking" },
-                                        { "method": "wallet" }
-                                    ]
-                                }
-                            },
-                            "hide": [
-                                { "method": "emi" },
-                                { "method": "paylater" }
-                            ],
-                            "sequence": ["block.upi", "block.other"],
-                            "preferences": {
-                                "show_default_blocks": false
-                            }
-                        }
-                    },
                     "retry": {
                         "enabled": false // Let us handle failure gracefully
                     },
@@ -399,8 +369,8 @@
                                 body: JSON.stringify({
                                     parking_lot_id: bookingData.lot_id,
                                     slot_ids: slots.map(s => s.id),
-                                    time_slot_id: bookingData.time_slot_id,
-                                    date: bookingData.date,
+                                    start_datetime: bookingData.start_datetime,
+                                    end_datetime: bookingData.end_datetime,
                                     vehicle_type: bookingData.vehicle_type,
                                     email: document.getElementById('cust_email').value,
                                     customer_name: document.getElementById('cust_name').value,
@@ -434,7 +404,7 @@
                     "prefill": {
                         "name": document.getElementById('cust_name').value,
                         "email": document.getElementById('cust_email').value,
-                        "contact": document.getElementById('cust_phone').value || ""
+                        "contact": (document.getElementById('cust_phone').value || "").replace(/\s+/g, '')
                     },
                     "theme": {
                         "color": "#000000" // Premium Dark Mode feel for gateway
@@ -458,7 +428,10 @@
                 rzp1.open();
 
             } catch (err) {
-                console.error(err);
+                console.error("Payment Initialization Error Payload: ", {
+                    error: err,
+                    order_response: typeof orderDataResp !== 'undefined' ? orderDataResp : null
+                });
                 showCustomAlert("Initialization Failed", err.message || 'Payment initialization failed. Please try again.', true);
                 btn.disabled = false;
                 btn.innerHTML = 'Pay & Confirm Booking';

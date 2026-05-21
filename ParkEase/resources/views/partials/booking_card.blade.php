@@ -38,10 +38,8 @@
             
             <div class="ms-auto text-end">
                 @php
-                    $startTimeStr = explode('-', $booking->time_slot_id)[0];
-                    $endTimeStr = explode('-', $booking->time_slot_id)[1];
-                    $start = \Carbon\Carbon::parse($booking->date . ' ' . $startTimeStr);
-                    $end = \Carbon\Carbon::parse($booking->date . ' ' . $endTimeStr);
+                    $start = \Carbon\Carbon::parse($booking->booking_start_datetime);
+                    $end = \Carbon\Carbon::parse($booking->booking_end_datetime);
                 @endphp
 
                 @if($type === 'active')
@@ -67,7 +65,7 @@
             <div class="col-6">
                 <div class="p-2 rounded-2 text-center" style="background: var(--bg-elevated); border: 1px solid var(--border-default);">
                     <div class="text-small fw-bold text-uppercase text-muted" style="font-size: 0.6rem; letter-spacing: 0.5px;">Window</div>
-                    <div class="fw-bold text-small text-primary text-nowrap">{{ $booking->time_slot_id }}</div>
+                    <div class="fw-bold text-small text-primary text-nowrap">{{ $start->format('H:i') }} - {{ $end->format('H:i') }}</div>
                 </div>
             </div>
         </div>
@@ -81,16 +79,16 @@
 
         <div class="mt-auto d-flex gap-2">
             @if($type === 'active')
-                <a href="https://www.google.com/maps/dir/?api=1&destination={{ $booking->parkingLot->latitude }},{{ $booking->parkingLot->longitude }}" target="_blank" class="btn btn-secondary flex-grow-1">
-                    <i class="bi bi-geo-alt"></i> Map
-                </a>
+                <button class="btn btn-primary flex-grow-1" onclick="openExtendModal('{{ $booking->_id }}', '{{ $booking->parkingLot->name }}', '{{ $booking->slot->slot_number }}')">
+                    <i class="bi bi-clock-history"></i> Extend
+                </button>
                 <div class="dropdown flex-grow-1">
                     <button class="btn btn-brand w-100" data-bs-toggle="dropdown">
-                        <i class="bi bi-ticket-perforated"></i> Ticket
+                        <i class="bi bi-gear"></i> Options
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-premium">
-                        <li><a class="dropdown-item dropdown-item-premium" href="javascript:void(0)" onclick="openExtendModal('{{ $booking->_id }}', '{{ $booking->parkingLot->name }}', '{{ $booking->slot->slot_number }}')"><i class="bi bi-clock-history"></i> Extend Session</a></li>
-                        <li><a class="dropdown-item dropdown-item-premium" href="javascript:void(0)" onclick="openTicketModal('{{ $booking->_id }}', '{{ $booking->parkingLot->name }}', '{{ \Carbon\Carbon::parse($booking->date)->format('M d, Y') }}', '{{ $booking->time_slot_id }}', '{{ $booking->slot->slot_number }}', '{{ strtoupper($booking->vehicle_type ?? 'CAR') }}', '{{ $booking->booking_id }}')"><i class="bi bi-qr-code-scan"></i> E-Ticket</a></li>
+                        <li><a class="dropdown-item dropdown-item-premium" href="https://www.google.com/maps/dir/?api=1&destination={{ $booking->parkingLot->latitude }},{{ $booking->parkingLot->longitude }}" target="_blank"><i class="bi bi-geo-alt"></i> Navigate</a></li>
+                        <li><a class="dropdown-item dropdown-item-premium" href="javascript:void(0)" onclick="openTicketModal('{{ $booking->_id }}', '{{ $booking->parkingLot->name }}', '{{ \Carbon\Carbon::parse($booking->date)->format('M d, Y') }}', '{{ $start->format('H:i') }} - {{ $end->format('H:i') }}', '{{ $booking->slot->slot_number }}', '{{ strtoupper($booking->vehicle_type ?? 'CAR') }}', '{{ $booking->booking_id }}')"><i class="bi bi-qr-code-scan"></i> E-Ticket</a></li>
                         <li><div class="dropdown-divider dropdown-divider-premium"></div></li>
                         <li><a class="dropdown-item dropdown-item-premium" href="{{ route('invoice.view', $booking->_id) }}" target="_blank"><i class="bi bi-eye"></i> View PDF</a></li>
                         <li><a class="dropdown-item dropdown-item-premium" href="{{ route('invoice.download', $booking->_id) }}"><i class="bi bi-download"></i> Download PDF</a></li>
@@ -110,7 +108,7 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-premium">
                         <li><a class="dropdown-item dropdown-item-premium" href="https://www.google.com/maps/dir/?api=1&destination={{ $booking->parkingLot->latitude }},{{ $booking->parkingLot->longitude }}" target="_blank"><i class="bi bi-geo-alt"></i> Navigate</a></li>
-                        <li><a class="dropdown-item dropdown-item-premium" href="javascript:void(0)" onclick="openTicketModal('{{ $booking->_id }}', '{{ $booking->parkingLot->name }}', '{{ \Carbon\Carbon::parse($booking->date)->format('M d, Y') }}', '{{ $booking->time_slot_id }}', '{{ $booking->slot->slot_number }}', '{{ strtoupper($booking->vehicle_type ?? 'CAR') }}', '{{ $booking->booking_id }}')"><i class="bi bi-qr-code-scan"></i> E-Ticket</a></li>
+                        <li><a class="dropdown-item dropdown-item-premium" href="javascript:void(0)" onclick="openTicketModal('{{ $booking->_id }}', '{{ $booking->parkingLot->name }}', '{{ \Carbon\Carbon::parse($booking->date)->format('M d, Y') }}', '{{ $start->format('H:i') }} - {{ $end->format('H:i') }}', '{{ $booking->slot->slot_number }}', '{{ strtoupper($booking->vehicle_type ?? 'CAR') }}', '{{ $booking->booking_id }}')"><i class="bi bi-qr-code-scan"></i> E-Ticket</a></li>
                         <li><div class="dropdown-divider dropdown-divider-premium"></div></li>
                         <li><a class="dropdown-item dropdown-item-premium" href="{{ route('invoice.view', $booking->_id) }}" target="_blank"><i class="bi bi-eye"></i> View PDF</a></li>
                         <li><a class="dropdown-item dropdown-item-premium" href="{{ route('invoice.download', $booking->_id) }}"><i class="bi bi-download"></i> Download PDF</a></li>

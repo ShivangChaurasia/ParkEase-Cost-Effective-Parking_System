@@ -57,20 +57,20 @@ class OwnerController extends Controller
             'slot_ids.*' => 'required|string',
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'required|string|max:15',
-            'date' => 'required|date',
-            'time_slot_id' => 'required|string',
+            'start_datetime' => 'required|date',
+            'end_datetime' => 'required|date|after:start_datetime',
         ]);
     
         // Past-Time Slot Booking Validation (Authoritative Backend Guard)
-        $times = explode('-', $validated['time_slot_id']);
-        $startTimeStr = trim($times[0]);
-        $slotDateTime = \Carbon\Carbon::parse($validated['date'] . ' ' . $startTimeStr, 'Asia/Kolkata');
+        $start = \Carbon\Carbon::parse($validated['start_datetime'], 'Asia/Kolkata');
+        $end = \Carbon\Carbon::parse($validated['end_datetime'], 'Asia/Kolkata');
+        $duration = $start->diffInMinutes($end);
 
-        if ($slotDateTime->isPast()) {
+        if ($start->isPast()) {
             \Illuminate\Support\Facades\Log::warning('Manual attempt by owner to book a past time slot.', [
                 'user_id' => Auth::id(),
                 'slot_ids' => $validated['slot_ids'],
-                'attempted_datetime' => $slotDateTime->toDateTimeString(),
+                'attempted_datetime' => $start->toDateTimeString(),
                 'ip_address' => $request->ip(),
             ]);
 
@@ -88,27 +88,27 @@ class OwnerController extends Controller
     
             // Check if already booked
             $exists = Booking::where('slot_id', $slot->_id)
-                ->where('date', $validated['date'])
-                ->where('time_slot_id', $validated['time_slot_id'])
-                ->whereIn('status', ['confirmed', 'pending'])
+                ->whereIn('status', ['confirmed', 'pending', 'active'])
+                ->where(function ($query) use ($start, $end) {
+                    $query->where('booking_start_datetime', '<', $end)
+                          ->where('booking_end_datetime', '>', $start);
+                })
                 ->exists();
     
             if ($exists) {
                 return response()->json(['message' => "Slot {$slot->slot_number} already booked for this time."], 409);
             }
     
-            $price = match ($slot->vehicle_type) {
+            $hourlyRate = match ($slot->vehicle_type) {
                 'car' => $parkingLot->car_price,
                 'bike' => $parkingLot->bike_price,
                 'bus' => $parkingLot->bus_price,
                 default => 0,
             };
     
+            $price = ($duration / 60) * $hourlyRate;
+
             $now = \Carbon\Carbon::now('Asia/Kolkata');
-            $times = explode('-', $validated['time_slot_id']);
-            $start = \Carbon\Carbon::parse($validated['date'] . ' ' . trim($times[0]), 'Asia/Kolkata');
-            $end = \Carbon\Carbon::parse($validated['date'] . ' ' . trim($times[1]), 'Asia/Kolkata');
-            
             $status = 'upcoming';
             if ($now->greaterThanOrEqualTo($start) && $now->lessThanOrEqualTo($end)) {
                 $status = 'active';
@@ -118,8 +118,11 @@ class OwnerController extends Controller
                 'user_id' => Auth::id(), // Booked by the owner
                 'parking_lot_id' => $parkingLot->_id,
                 'slot_id' => $slot->_id,
-                'time_slot_id' => $validated['time_slot_id'],
-                'date' => $validated['date'],
+                'time_slot_id' => $start->format('H:i') . '-' . $end->format('H:i'),
+                'date' => $start->format('Y-m-d'),
+                'booking_start_datetime' => $start->toDateTimeString(),
+                'booking_end_datetime' => $end->toDateTimeString(),
+                'booking_duration_minutes' => $duration,
                 'price' => $price,
                 'status' => $status,
                 'booking_id' => strtoupper(\Illuminate\Support\Str::random(10)),
@@ -143,8 +146,8 @@ class OwnerController extends Controller
                 'payment_method' => 'cash',
                 'description' => "Manual Booking (Cash): Slot {$slot->slot_number} - {$validated['customer_name']}",
                 'metadata' => [
-                    'date' => $validated['date'],
-                    'time_slot' => $validated['time_slot_id'],
+                    'date' => $start->format('Y-m-d'),
+                    'time_slot' => $start->format('H:i') . '-' . $end->format('H:i'),
                     'customer' => $validated['customer_name']
                 ]
             ]);
@@ -387,6 +390,108 @@ class OwnerController extends Controller
             'success' => true,
             'message' => 'Check-in successful! Attendance marked.',
             'booking' => $booking
+        ]);
+    }
+
+    public function getClosureSummary($id)
+    {
+        $parkingLot = ParkingLot::where('_id', $id)->where('owner_id', Auth::id())->firstOrFail();
+
+        $activeBookings = Booking::where('parking_lot_id', $parkingLot->_id)
+            ->whereIn('status', ['confirmed', 'pending', 'upcoming', 'active'])
+            ->get();
+        
+        $latestBooking = $activeBookings->sortByDesc('date')->first();
+        
+        $minDate = \Carbon\Carbon::today('Asia/Kolkata')->addDays(7);
+        $closureDate = clone $minDate;
+
+        if ($latestBooking) {
+            $latestBookingDate = \Carbon\Carbon::parse($latestBooking->date, 'Asia/Kolkata');
+            if ($latestBookingDate->greaterThanOrEqualTo($minDate)) {
+                $closureDate = $latestBookingDate->addDay();
+            }
+        }
+
+        $revenueImpact = $activeBookings->sum('price');
+
+        return response()->json([
+            'scheduled_removal_date' => $closureDate->format('Y-m-d'),
+            'active_bookings_count' => $activeBookings->count(),
+            'latest_booking_date' => $latestBooking ? $latestBooking->date : null,
+            'revenue_impact' => $revenueImpact,
+        ]);
+    }
+
+    public function scheduleClosure(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'reason' => 'nullable|string',
+        ]);
+
+        $parkingLot = ParkingLot::where('_id', $id)->where('owner_id', Auth::id())->firstOrFail();
+
+        if (in_array($parkingLot->status, ['scheduled_for_removal', 'inactive', 'permanently_removed'])) {
+            return response()->json(['message' => 'Parking lot is already scheduled for closure or inactive.'], 400);
+        }
+
+        $summaryRes = $this->getClosureSummary($id)->getData();
+
+        $parkingLot->status = 'scheduled_for_removal';
+        $parkingLot->removal_requested_at = \Carbon\Carbon::now('Asia/Kolkata')->toDateTimeString();
+        $parkingLot->scheduled_removal_date = $summaryRes->scheduled_removal_date;
+        $parkingLot->removal_reason = $validated['reason'] ?? null;
+        $parkingLot->removed_by = Auth::id();
+        $parkingLot->save();
+
+        return response()->json([
+            'message' => 'Closure scheduled successfully.',
+            'scheduled_removal_date' => $parkingLot->scheduled_removal_date,
+            'active_bookings_count' => $summaryRes->active_bookings_count
+        ]);
+    }
+
+    public function toggleAcceptingBookings(Request $request, $id)
+    {
+        $parkingLot = ParkingLot::where('_id', $id)->where('owner_id', Auth::id())->firstOrFail();
+
+        if (in_array($parkingLot->status, ['inactive', 'permanently_removed'])) {
+            return response()->json(['message' => 'Cannot toggle bookings for inactive parking lots.'], 400);
+        }
+
+        $isAccepting = filter_var($request->input('is_accepting_bookings', true), FILTER_VALIDATE_BOOLEAN);
+        $parkingLot->is_accepting_bookings = $isAccepting;
+        $parkingLot->save();
+
+        return response()->json([
+            'message' => 'Booking status updated successfully.',
+            'is_accepting_bookings' => $parkingLot->is_accepting_bookings
+        ]);
+    }
+
+    public function cancelClosure(Request $request, $id)
+    {
+        $parkingLot = ParkingLot::where('_id', $id)->where('owner_id', Auth::id())->firstOrFail();
+
+        if (!in_array($parkingLot->status, ['scheduled_for_removal', 'closing_soon'])) {
+            return response()->json(['message' => 'This parking lot does not have a scheduled closure to cancel.'], 400);
+        }
+
+        if (in_array($parkingLot->status, ['inactive', 'permanently_removed'])) {
+            return response()->json(['message' => 'Cannot cancel closure for an already deactivated parking lot.'], 400);
+        }
+
+        $parkingLot->status = 'active';
+        $parkingLot->scheduled_removal_date = null;
+        $parkingLot->removal_requested_at = null;
+        $parkingLot->removal_reason = null;
+        $parkingLot->removed_by = null;
+        $parkingLot->is_accepting_bookings = true;
+        $parkingLot->save();
+
+        return response()->json([
+            'message' => 'Scheduled closure has been cancelled. Parking lot is now active.',
+            'status' => $parkingLot->status
         ]);
     }
 }

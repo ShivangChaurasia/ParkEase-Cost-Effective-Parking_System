@@ -21,8 +21,7 @@ class DashboardController extends Controller
                       ->orWhere('booking_email', $user->email);
             })
             ->with(['parkingLot:id,name,city,pincode,latitude,longitude', 'slot:id,slot_number,vehicle_type'])
-            ->orderBy('date', 'desc')
-            ->orderBy('time_slot_id', 'desc')
+            ->orderBy('booking_start_datetime', 'desc')
             ->get();
 
         $now = Carbon::now();
@@ -40,9 +39,8 @@ class DashboardController extends Controller
                 continue;
             }
 
-            $times = explode('-', $booking->time_slot_id);
-            $start = Carbon::parse($booking->date . ' ' . $times[0]);
-            $end = Carbon::parse($booking->date . ' ' . $times[1]);
+            $start = Carbon::parse($booking->booking_start_datetime, 'Asia/Kolkata');
+            $end = Carbon::parse($booking->booking_end_datetime, 'Asia/Kolkata');
 
             if ($now->between($start, $end)) {
                 $categorized['active'][] = $booking;

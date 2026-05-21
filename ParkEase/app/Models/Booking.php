@@ -33,14 +33,31 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'verified_by',
     'completed_at',
     'expired_at',
-    'vehicle_number'
+    'vehicle_number',
+    'booking_start_datetime',
+    'booking_end_datetime',
+    'booking_duration_minutes',
+    'extended_from_booking_id'
 ]) ]
 class Booking extends Model
 {
     protected $collection = 'bookings';
 
+    protected $casts = [
+        'booking_start_datetime' => 'datetime',
+        'booking_end_datetime' => 'datetime',
+        'generated_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'attended_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'expired_at' => 'datetime',
+    ];
+
     public function getStartCarbon()
     {
+        if ($this->booking_start_datetime) {
+            return \Carbon\Carbon::parse($this->booking_start_datetime, 'Asia/Kolkata');
+        }
         if (!$this->time_slot_id || !$this->date) return null;
         $times = explode('-', $this->time_slot_id);
         return \Carbon\Carbon::parse($this->date . ' ' . trim($times[0]), 'Asia/Kolkata');
@@ -48,6 +65,9 @@ class Booking extends Model
 
     public function getEndCarbon()
     {
+        if ($this->booking_end_datetime) {
+            return \Carbon\Carbon::parse($this->booking_end_datetime, 'Asia/Kolkata');
+        }
         if (!$this->time_slot_id || !$this->date) return null;
         $times = explode('-', $this->time_slot_id);
         return \Carbon\Carbon::parse($this->date . ' ' . trim($times[1]), 'Asia/Kolkata');

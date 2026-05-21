@@ -220,6 +220,12 @@
             opacity: 0.4;
         }
 
+        .hover-text-primary {
+            transition: color var(--transition-fast);
+        }
+        .hover-text-primary:hover {
+            color: var(--text-primary) !important;
+        }
     </style>
     @stack('styles')
 </head>
@@ -298,21 +304,65 @@
         @yield('content')
     </main>
 
-    <footer class="py-5 mt-auto" style="background: var(--bg-surface); border-top: 1px solid var(--border-default);">
-        <div class="container text-center">
-            <h3 class="fw-bold mb-3 d-flex align-items-center justify-content-center gap-2" style="font-size: 1.8rem; letter-spacing: -0.02em;">
-                <img src="/images/favicon.png" alt="Logo" style="width: 40px; height: 40px;">
-                <span class="brand-typewriter">
-                    <span class="brand-park">Park</span><span class="brand-ease">Ease</span>
-                </span>
-            </h3>
-            <p class="text-muted text-small mb-4">Intelligent urban SaaS for smart mobility.</p>
-            <div class="d-flex justify-content-center gap-4 mb-4">
-                <a href="#" class="text-secondary hover-lift"><i class="bi bi-twitter-x"></i></a>
-                <a href="#" class="text-secondary hover-lift"><i class="bi bi-linkedin"></i></a>
-                <a href="#" class="text-secondary hover-lift"><i class="bi bi-github"></i></a>
+    <footer class="mt-auto" style="background: var(--bg-surface); border-top: 1px solid var(--border-default); padding-top: 4rem; padding-bottom: 2rem;">
+        <div class="container">
+            <div class="row gy-4 mb-5">
+                <div class="col-lg-4 col-md-6 pe-lg-5">
+                    <a href="/" class="d-flex align-items-center gap-2 text-decoration-none mb-3">
+                        <img src="/images/favicon.png" alt="Logo" style="width: 32px; height: 32px;">
+                        <span class="fw-bold" style="font-size: 1.4rem; color: var(--text-primary); letter-spacing: -0.02em;">
+                            Park<span style="color: var(--brand-aqua);">Ease</span>
+                        </span>
+                    </a>
+                    <p class="text-muted text-small mb-4" style="line-height: 1.6;">
+                        Intelligent urban SaaS for smart mobility. We are revolutionizing urban parking by connecting drivers with premium parking spaces seamlessly.
+                    </p>
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="#" class="text-secondary hover-lift" style="font-size: 1.2rem;"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="text-secondary hover-lift" style="font-size: 1.2rem;"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="text-secondary hover-lift" style="font-size: 1.2rem;"><i class="bi bi-github"></i></a>
+                        <a href="#" class="text-secondary hover-lift" style="font-size: 1.2rem;"><i class="bi bi-instagram"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-3 col-6">
+                    <h6 class="fw-bold mb-3" style="color: var(--text-primary);">Product</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2 text-small">
+                        <li><a href="/search" class="text-muted text-decoration-none hover-text-primary">Find Parking</a></li>
+                        <li><a href="/switch-role" class="text-muted text-decoration-none hover-text-primary">List your Space</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none hover-text-primary">Pricing</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none hover-text-primary">Corporate</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-3 col-6">
+                    <h6 class="fw-bold mb-3" style="color: var(--text-primary);">Company</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2 text-small">
+                        <li><a href="#" class="text-muted text-decoration-none hover-text-primary">About Us</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none hover-text-primary">Careers</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none hover-text-primary">Blog</a></li>
+                        <li><a href="#" class="text-muted text-decoration-none hover-text-primary">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-4 col-md-12">
+                    <h6 class="fw-bold mb-3" style="color: var(--text-primary);">Stay Updated</h6>
+                    <p class="text-muted text-small mb-3">Subscribe to our newsletter for the latest mobility insights and exclusive offers.</p>
+                    <form class="d-flex gap-2">
+                        <input type="email" class="form-control form-control-sm bg-base border-default text-primary" placeholder="Enter your email" style="border-radius: var(--radius-sm); padding: 0.5rem 1rem; background-color: var(--bg-base); color: var(--text-primary);">
+                        <button type="button" class="btn btn-sm btn-brand px-3" style="border-radius: var(--radius-sm);">Subscribe</button>
+                    </form>
+                </div>
             </div>
-            <p class="text-muted text-small mb-0">&copy; {{ date('Y') }} ParkEase. Sustainable Mobility.</p>
+            
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center pt-4 border-top" style="border-color: var(--border-subtle) !important;">
+                <p class="text-muted text-small mb-3 mb-md-0">&copy; {{ date('Y') }} ParkEase Inc. All rights reserved.</p>
+                <div class="d-flex gap-4 text-small">
+                    <a href="#" class="text-muted text-decoration-none hover-text-primary">Privacy Policy</a>
+                    <a href="#" class="text-muted text-decoration-none hover-text-primary">Terms of Service</a>
+                    <a href="#" class="text-muted text-decoration-none hover-text-primary">Cookie Settings</a>
+                </div>
+            </div>
         </div>
     </footer>
 
@@ -416,6 +466,7 @@
                         if (kycStatus === 'verified') {
                             const switcher = document.createElement('div');
                             switcher.className = 'nav-pills-premium d-none d-lg-flex me-2';
+                            switcher.title = `Click to switch role to ${currentRole === 'owner' ? 'User' : 'Host'}`;
                             switcher.innerHTML = `
                                 <a href="/switch-role" class="nav-link ${currentRole === 'user' ? 'active' : ''}">User</a>
                                 <a href="/switch-role" class="nav-link ${currentRole === 'owner' ? 'active' : ''}">Host</a>

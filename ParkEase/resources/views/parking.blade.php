@@ -216,6 +216,16 @@
         </div>
     </div>
 
+    @if(in_array($lot->status ?? 'active', ['closing_soon', 'scheduled_for_removal']))
+    <div class="alert alert-warning d-flex align-items-center rounded-4 mb-3 shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+        <div>
+            <strong>Notice:</strong> This parking area is scheduled to close on <strong>{{ $lot->scheduled_removal_date }}</strong>. 
+            Bookings after this date will not be available.
+        </div>
+    </div>
+    @endif
+
     <div class="row g-4">
         <div class="col-lg-4">
             <div class="glass-card p-4">
@@ -223,18 +233,25 @@
                 
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-muted">Select Date</label>
-                    <input type="date" id="bookingDate" class="form-control rounded-3" min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}">
+                    <input type="date" id="bookingDate" class="form-control rounded-3" min="{{ date('Y-m-d') }}" max="{{ \Carbon\Carbon::now('Asia/Kolkata')->addDays(7)->format('Y-m-d') }}" value="{{ date('Y-m-d') }}">
                 </div>
                 
-                <div class="mb-4">
-                    <label class="form-label small fw-bold text-muted">Time Slot</label>
-                    <select id="timeSlot" class="form-select rounded-3">
-                        <option value="10:00-11:00">10:00 AM - 11:00 AM</option>
-                        <option value="11:00-12:00">11:00 AM - 12:00 PM</option>
-                        <option value="12:00-13:00">12:00 PM - 01:00 PM</option>
-                        <option value="13:00-14:00">01:00 PM - 02:00 PM</option>
-                        <option value="14:00-15:00">02:00 PM - 03:00 PM</option>
-                    </select>
+                <div class="row mb-4 g-2">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-muted">Start Time</label>
+                        <input type="time" id="startTime" class="form-control rounded-3" value="10:00">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-muted">Duration</label>
+                        <select id="bookingDuration" class="form-select rounded-3">
+                            <option value="30">30 mins</option>
+                            <option value="60" selected>1 hour</option>
+                            <option value="120">2 hours</option>
+                            <option value="240">4 hours</option>
+                            <option value="480">8 hours</option>
+                            <option value="1440">24 hours</option>
+                        </select>
+                    </div>
                 </div>
 
                 <button id="checkAvailabilityBtn" class="btn btn-dark w-100 py-3 rounded-4 fw-bold mb-4 shadow-sm">
@@ -376,22 +393,33 @@
         };
     }
 
-    function isSlotExpired(dateStr, timeSlotId) {
-        if (!dateStr || !timeSlotId) return false;
-        const ist = getISTDateTime();
+    function getStartAndEndDateTime() {
+        const date = document.getElementById('bookingDate').value;
+        const time = document.getElementById('startTime').value;
+        const durationMins = parseInt(document.getElementById('bookingDuration').value);
         
-        if (dateStr < ist.date) {
-            return true;
-        }
+        if (!date || !time) return null;
         
-        if (dateStr === ist.date) {
-            const startTimeStr = timeSlotId.split('-')[0].trim();
-            const slotStartTime = startTimeStr.includes(':') ? startTimeStr + ':00' : startTimeStr;
-            if (slotStartTime < ist.time) {
-                return true;
-            }
-        }
-        return false;
+        const start = new Date(`${date}T${time}:00`);
+        const end = new Date(start.getTime() + durationMins * 60000);
+        
+        const formatDt = (dt) => {
+            const pad = n => n.toString().padStart(2, '0');
+            return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:00`;
+        };
+        
+        return {
+            start_datetime: formatDt(start),
+            end_datetime: formatDt(end),
+            duration_mins: durationMins,
+            start_obj: start
+        };
+    }
+
+    function isSlotExpired(startObj) {
+        if (!startObj) return false;
+        const now = new Date();
+        return startObj < now;
     }
 
     const parkingId = '{{ $id }}';
@@ -415,12 +443,12 @@
 
     async function loadSlots() {
         const date = document.getElementById('bookingDate').value;
-        const timeSlotId = document.getElementById('timeSlot').value;
-        if (!date) return showCustomAlert("Select Date", "Please select a booking date to check availability.", true);
+        const dt = getStartAndEndDateTime();
+        if (!date || !dt) return showCustomAlert("Select Date", "Please select a booking date and time to check availability.", true);
 
         const container = document.getElementById('slotGridContainer');
 
-        if (isSlotExpired(date, timeSlotId)) {
+        if (isSlotExpired(dt.start_obj)) {
             showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true);
             selectedSlots = [];
             container.innerHTML = `
@@ -442,7 +470,7 @@
         container.innerHTML = Array(12).fill(0).map(() => `<div class="skeleton" style="width: 55px; height: 55px;"></div>`).join('');
 
         try {
-            const response = await fetch(`/api/parking-lots/${parkingId}/slots?date=${date}&time_slot_id=${timeSlotId}`);
+            const response = await fetch(`/api/parking-lots/${parkingId}/slots?start_datetime=${encodeURIComponent(dt.start_datetime)}&end_datetime=${encodeURIComponent(dt.end_datetime)}`);
             if (!response.ok) throw new Error('Failed to fetch slots');
             
             const data = await response.json();
@@ -470,26 +498,36 @@
         document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
         document.getElementById('tab-' + type).classList.add('active');
 
-        if (allSlots.length === 0) return;
+        const container = document.getElementById('slotGridContainer');
+
+        if (allSlots.length === 0) {
+            container.innerHTML = `<p class="text-muted py-5 w-100 text-center">No slots found for this parking area.</p>`;
+            return;
+        }
 
         const filtered = allSlots.filter(s => s.vehicle_type === type);
-        const container = document.getElementById('slotGridContainer');
         
         if(filtered.length === 0) {
             container.innerHTML = `<p class="text-muted py-5 w-100 text-center">No ${type} slots available.</p>`;
             return;
         }
 
-        const date = document.getElementById('bookingDate').value;
-        const timeSlotId = document.getElementById('timeSlot').value;
-        const isExpired = isSlotExpired(date, timeSlotId);
+        const dt = getStartAndEndDateTime();
+        const isExpired = dt ? isSlotExpired(dt.start_obj) : false;
 
         container.innerHTML = filtered.map(slot => {
             const slotId = slot.id || slot._id;
             const isSelected = selectedSlots.some(s => s.id === slotId);
             const isBooked = slot.is_booked || isExpired;
             const statusClass = isExpired ? 'slot-expired' : (slot.is_booked ? 'slot-booked' : (isSelected ? 'slot-selected' : 'slot-available'));
-            const onClick = isBooked ? '' : `onclick="toggleSlot('${slotId}', '${slot.slot_number}', '${slot.vehicle_type}', ${prices[slot.vehicle_type]})"`;
+            
+            let price = 0;
+            if (dt) {
+                const durationHours = dt.duration_mins / 60;
+                price = prices[slot.vehicle_type] * durationHours;
+            }
+            
+            const onClick = isBooked ? '' : `onclick="toggleSlot('${slotId}', '${slot.slot_number}', '${slot.vehicle_type}', ${price})"`;
             const tooltipAttr = isExpired ? 'title="Booking time expired"' : '';
             
             return `
@@ -561,20 +599,21 @@
             window.location.href = '/login';
             return;
         }
-        const date = document.getElementById('bookingDate').value;
-        const timeSlotId = document.getElementById('timeSlot').value;
-        if (isSlotExpired(date, timeSlotId)) {
+        const dt = getStartAndEndDateTime();
+        if (!dt || isSlotExpired(dt.start_obj)) {
             showCustomAlert("Slot Expired", "This parking slot time has already passed. Please select a future time slot.", true);
             return;
         }
         const bookingData = {
             lot_id: parkingId,
             slots: selectedSlots,
-            time_slot_id: timeSlotId,
-            date: date
+            start_datetime: dt.start_datetime,
+            end_datetime: dt.end_datetime,
+            duration_mins: dt.duration_mins,
+            created_at: Date.now()
         };
         sessionStorage.setItem('pending_booking', JSON.stringify(bookingData));
-        window.location.href = `/checkout?lot_id=${parkingId}`;
+        window.location.href = `/checkout?lot_id=${parkingId}&start_datetime=${encodeURIComponent(dt.start_datetime)}&end_datetime=${encodeURIComponent(dt.end_datetime)}`;
     });
 </script>
 @endpush

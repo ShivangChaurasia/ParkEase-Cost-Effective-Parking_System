@@ -11,6 +11,22 @@ class SearchController extends Controller
     {
         $query = ParkingLot::query();
 
+        // Base Visibility Rules
+        $query->whereNotIn('status', ['inactive', 'permanently_removed']);
+        $query->where(function($q) {
+            $q->where('is_accepting_bookings', '!=', false)
+              ->orWhereNull('is_accepting_bookings');
+        });
+
+        // Dependency on Selected Date vs Scheduled Closure Date
+        if ($request->filled('date')) {
+            $selectedDate = $request->input('date');
+            $query->where(function ($q) use ($selectedDate) {
+                $q->whereNull('scheduled_removal_date')
+                  ->orWhere('scheduled_removal_date', '>=', $selectedDate);
+            });
+        }
+
         if ($request->filled('pincode')) {
             $query->where('pincode', $request->input('pincode'));
         }

@@ -424,7 +424,7 @@
             const res = await fetch(`/api/bookings/${activeExtendId}/extend`, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ minutes: mins })
+                body: JSON.stringify({ additional_duration_minutes: mins })
             });
             const data = await res.json();
             if (res.ok) window.location.reload();

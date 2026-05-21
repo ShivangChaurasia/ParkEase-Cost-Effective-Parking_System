@@ -23,11 +23,29 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'bike_slots',
     'bus_slots',
     'opening_time',
-    'closing_time'
+    'closing_time',
+    'status',
+    'removal_requested_at',
+    'scheduled_removal_date',
+    'removal_reason',
+    'removed_at',
+    'removed_by',
+    'is_accepting_bookings'
 ])]
 class ParkingLot extends Model
 {
     protected $collection = 'parking_lots';
+
+    protected $attributes = [
+        'status' => 'active',
+        'is_accepting_bookings' => true,
+    ];
+
+    protected $casts = [
+        'is_accepting_bookings' => 'boolean',
+        'removal_requested_at' => 'datetime',
+        'removed_at' => 'datetime',
+    ];
 
     public function owner()
     {

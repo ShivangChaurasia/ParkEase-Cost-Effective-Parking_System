@@ -19,16 +19,24 @@ class BookingController extends Controller
     public function getSlots(Request $request, $parkingLotId)
     {
         $validated = $request->validate([
-            'date' => 'required|date|after_or_equal:today',
-            'time_slot_id' => 'required|string',
+            'start_datetime' => 'required|date',
+            'end_datetime' => 'required|date|after:start_datetime',
         ]);
 
-        // Auto-exclude expired slots for today's date
-        $times = explode('-', $validated['time_slot_id']);
-        $startTimeStr = trim($times[0]);
-        $slotDateTime = \Carbon\Carbon::parse($validated['date'] . ' ' . $startTimeStr, 'Asia/Kolkata');
+        $requestedStart = \Carbon\Carbon::parse($validated['start_datetime'], 'Asia/Kolkata');
+        $requestedEnd = \Carbon\Carbon::parse($validated['end_datetime'], 'Asia/Kolkata');
 
-        if ($slotDateTime->isPast()) {
+        if ($requestedStart->isPast()) {
+            return response()->json(['slots' => []]);
+        }
+
+        $parkingLot = ParkingLot::find($parkingLotId);
+        if (!$parkingLot || in_array($parkingLot->status, ['inactive', 'permanently_removed']) || $parkingLot->is_accepting_bookings === false) {
+            return response()->json(['slots' => []]);
+        }
+
+        $date = $requestedStart->format('Y-m-d');
+        if ($parkingLot->scheduled_removal_date && $date > $parkingLot->scheduled_removal_date) {
             return response()->json(['slots' => []]);
         }
 
@@ -37,12 +45,11 @@ class BookingController extends Controller
             ->get();
         
         $bookedSlotIds = Booking::where('parking_lot_id', $parkingLotId)
-            ->where('date', $validated['date'])
-            ->where('time_slot_id', $validated['time_slot_id'])
-            ->whereIn('status', ['confirmed', 'pending'])
-            ->pluck('slot_id')
-            ->map(fn($id) => (string)$id)
-            ->toArray();
+            ->whereIn('status', ['confirmed', 'pending', 'active'])
+            ->where(function ($query) use ($requestedStart, $requestedEnd) {
+                $query->where('booking_start_datetime', '<', $requestedEnd)
+                      ->where('booking_end_datetime', '>', $requestedStart);
+            })->pluck('slot_id')->map(fn($id) => (string)$id)->toArray();
 
         $slotsData = $slots->map(function ($slot) use ($bookedSlotIds) {
             $id = (string)$slot->_id;
@@ -64,8 +71,8 @@ class BookingController extends Controller
             'parking_lot_id' => 'required|string',
             'slot_ids' => 'required|array',
             'slot_ids.*' => 'required|string',
-            'time_slot_id' => 'required|string',
-            'date' => 'required|date|after_or_equal:today',
+            'start_datetime' => 'required|date',
+            'end_datetime' => 'required|date|after:start_datetime',
             'vehicle_type' => 'nullable|string',
             'email' => 'required|email',
             'customer_name' => 'nullable|string',
@@ -78,16 +85,16 @@ class BookingController extends Controller
         ]);
 
         // Past-Time Slot Booking Validation (Authoritative Backend Guard)
-        $times = explode('-', $validated['time_slot_id']);
-        $startTimeStr = trim($times[0]);
-        $slotDateTime = \Carbon\Carbon::parse($validated['date'] . ' ' . $startTimeStr, 'Asia/Kolkata');
+        $start = \Carbon\Carbon::parse($validated['start_datetime'], 'Asia/Kolkata');
+        $end = \Carbon\Carbon::parse($validated['end_datetime'], 'Asia/Kolkata');
+        $duration = $start->diffInMinutes($end);
 
-        if ($slotDateTime->isPast()) {
+        if ($start->isPast()) {
             // Task 8: Warning logging in laravel.log
             \Illuminate\Support\Facades\Log::warning('Manual attempt to book a past time slot.', [
                 'user_id' => Auth::id(),
                 'slot_ids' => $validated['slot_ids'],
-                'attempted_datetime' => $slotDateTime->toDateTimeString(),
+                'attempted_datetime' => $start->toDateTimeString(),
                 'ip_address' => $request->ip(),
             ]);
 
@@ -113,6 +120,17 @@ class BookingController extends Controller
         }
 
         $parkingLot = ParkingLot::findOrFail($validated['parking_lot_id']);
+        
+        // Final Dependency Revalidation
+        if (in_array($parkingLot->status, ['inactive', 'permanently_removed']) || $parkingLot->is_accepting_bookings === false) {
+            return response()->json(['message' => 'This parking area is currently not accepting bookings.'], 403);
+        }
+
+        $date = $start->format('Y-m-d');
+        if ($parkingLot->scheduled_removal_date && $date > $parkingLot->scheduled_removal_date) {
+            return response()->json(['message' => 'This parking area will not be operational on your selected booking date.'], 403);
+        }
+
         $bookings = [];
 
         foreach ($validated['slot_ids'] as $slotId) {
@@ -127,10 +145,11 @@ class BookingController extends Controller
             // Double-Booking Prevention
             $existingBooking = Booking::where('parking_lot_id', $parkingLot->_id)
                 ->where('slot_id', $slot->_id)
-                ->where('date', $validated['date'])
-                ->where('time_slot_id', $validated['time_slot_id'])
-                ->whereIn('status', ['confirmed', 'pending'])
-                ->exists();
+                ->whereIn('status', ['confirmed', 'pending', 'active'])
+                ->where(function ($query) use ($start, $end) {
+                    $query->where('booking_start_datetime', '<', $end)
+                          ->where('booking_end_datetime', '>', $start);
+                })->exists();
 
             if ($existingBooking) {
                 return response()->json([
@@ -138,12 +157,13 @@ class BookingController extends Controller
                 ], 409);
             }
 
-            $price = match ($slot->vehicle_type) {
+            $hourlyRate = match ($slot->vehicle_type) {
                 'car' => $parkingLot->car_price,
                 'bike' => $parkingLot->bike_price,
                 'bus' => $parkingLot->bus_price,
                 default => 0,
             };
+            $price = ($duration / 60) * $hourlyRate;
 
             $userId = Auth::id();
             $userEmail = $request->input('email');
@@ -156,9 +176,6 @@ class BookingController extends Controller
             }
 
             $now = \Carbon\Carbon::now('Asia/Kolkata');
-            $times = explode('-', $validated['time_slot_id']);
-            $start = \Carbon\Carbon::parse($validated['date'] . ' ' . trim($times[0]), 'Asia/Kolkata');
-            $end = \Carbon\Carbon::parse($validated['date'] . ' ' . trim($times[1]), 'Asia/Kolkata');
             
             $status = 'upcoming';
             if ($now->greaterThanOrEqualTo($start) && $now->lessThanOrEqualTo($end)) {
@@ -170,8 +187,11 @@ class BookingController extends Controller
                 'booking_email' => $userEmail,
                 'parking_lot_id' => $parkingLot->_id,
                 'slot_id' => $slot->_id,
-                'time_slot_id' => $validated['time_slot_id'],
-                'date' => $validated['date'],
+                'time_slot_id' => $start->format('H:i') . '-' . $end->format('H:i'),
+                'date' => $date,
+                'booking_start_datetime' => $start->toDateTimeString(),
+                'booking_end_datetime' => $end->toDateTimeString(),
+                'booking_duration_minutes' => $duration,
                 'price' => $price,
                 'status' => $status,
                 'payment_status' => $validated['payment_method'] === 'manual_qr' ? 'pending_verification' : 'paid',
@@ -200,7 +220,7 @@ class BookingController extends Controller
                 'description' => "Booking for slot {$slot->slot_number} at {$parkingLot->name}",
                 'metadata' => [
                     'date' => $validated['date'],
-                    'time_slot' => $validated['time_slot_id']
+                    'time_slot' => $start->format('H:i') . '-' . $end->format('H:i')
                 ]
             ]);
 
@@ -228,9 +248,9 @@ class BookingController extends Controller
         }
 
         // Calculate refund
-        // Assume time_slot_id is "HH:mm-HH:mm"
-        $startTimeStr = explode('-', $booking->time_slot_id)[0];
-        $bookingStart = \Carbon\Carbon::parse($booking->date . ' ' . $startTimeStr);
+        $bookingStart = $booking->booking_start_datetime 
+            ? \Carbon\Carbon::parse($booking->booking_start_datetime)
+            : \Carbon\Carbon::parse($booking->date . ' ' . explode('-', $booking->time_slot_id)[0]);
         $now = now();
         
         $hoursDiff = $now->diffInHours($bookingStart, false);
@@ -281,7 +301,7 @@ class BookingController extends Controller
     public function extendBooking(Request $request, $id)
     {
         $validated = $request->validate([
-            'minutes' => 'required|integer|min:15|max:120',
+            'additional_duration_minutes' => 'required|integer|min:15|max:120',
         ]);
 
         $booking = Booking::findOrFail($id);
@@ -291,41 +311,44 @@ class BookingController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        if ($booking->status !== 'confirmed') {
-            return response()->json(['message' => 'Only active bookings can be extended.'], 400);
+        if (!in_array($booking->status, ['confirmed', 'active'])) {
+            return response()->json(['message' => 'Only active or confirmed bookings can be extended.'], 400);
         }
 
         // Parse current end time
-        $times = explode('-', $booking->time_slot_id);
-        $currentEnd = \Carbon\Carbon::parse($booking->date . ' ' . $times[1]);
-        $newEnd = $currentEnd->copy()->addMinutes($validated['minutes']);
+        $currentEnd = $booking->booking_end_datetime 
+            ? \Carbon\Carbon::parse($booking->booking_end_datetime)
+            : \Carbon\Carbon::parse($booking->date . ' ' . explode('-', $booking->time_slot_id)[1]);
+
+        $newEnd = $currentEnd->copy()->addMinutes($validated['additional_duration_minutes']);
         
         // Availability Check
-        // Check if another booking starts before our new end time and ends after our old end time
         $collision = Booking::where('parking_lot_id', $booking->parking_lot_id)
             ->where('slot_id', $booking->slot_id)
-            ->where('date', $booking->date)
             ->where('_id', '!=', $booking->_id)
-            ->where('status', 'confirmed')
-            ->get()
-            ->filter(function ($b) use ($currentEnd, $newEnd) {
-                $bTimes = explode('-', $b->time_slot_id);
-                $bStart = \Carbon\Carbon::parse($b->date . ' ' . $bTimes[0]);
-                // If the existing booking starts before our new end time AND after our current end time
-                return $bStart->lt($newEnd) && $bStart->gte($currentEnd);
-            })->first();
+            ->whereIn('status', ['confirmed', 'pending', 'active'])
+            ->where(function ($query) use ($currentEnd, $newEnd) {
+                $query->where('booking_start_datetime', '<', $newEnd)
+                      ->where('booking_end_datetime', '>', $currentEnd);
+            })->exists();
 
         if ($collision) {
-            return response()->json(['message' => 'Cannot extend: The slot is reserved by another user starting at ' . explode('-', $collision->time_slot_id)[0]], 409);
+            return response()->json(['message' => 'Cannot extend: The slot is reserved by another user during the extension period.'], 409);
         }
 
-        // Calculate Cost (Pro-rated)
-        // For simplicity: (original_price / 60) * minutes * 1.2 (premium for extension)
-        $extensionCost = round(($booking->price / 60) * $validated['minutes'] * 1.2);
+        // Calculate Cost
+        $hourlyRate = match ($booking->vehicle_type) {
+            'car' => $booking->parkingLot->car_price ?? 0,
+            'bike' => $booking->parkingLot->bike_price ?? 0,
+            'bus' => $booking->parkingLot->bus_price ?? 0,
+            default => 0,
+        };
+        $extensionCost = ($validated['additional_duration_minutes'] / 60) * $hourlyRate;
 
         // Update Booking
-        $newTimeSlotId = $times[0] . '-' . $newEnd->format('H:i');
-        $booking->time_slot_id = $newTimeSlotId;
+        $booking->booking_end_datetime = $newEnd->toDateTimeString();
+        $booking->booking_duration_minutes = ($booking->booking_duration_minutes ?? 0) + $validated['additional_duration_minutes'];
+        $booking->time_slot_id = explode('-', $booking->time_slot_id)[0] . '-' . $newEnd->format('H:i');
         $booking->price += $extensionCost;
         $booking->save();
 
@@ -338,9 +361,9 @@ class BookingController extends Controller
             'type' => 'payment',
             'status' => 'completed',
             'payment_method' => $booking->payment_method ?? 'original',
-            'description' => "Extension ({$validated['minutes']} mins) for booking {$booking->booking_id}",
+            'description' => "Extension ({$validated['additional_duration_minutes']} mins) for booking {$booking->booking_id}",
             'metadata' => [
-                'additional_minutes' => $validated['minutes'],
+                'additional_minutes' => $validated['additional_duration_minutes'],
                 'new_end_time' => $newEnd->format('H:i')
             ]
         ]);
