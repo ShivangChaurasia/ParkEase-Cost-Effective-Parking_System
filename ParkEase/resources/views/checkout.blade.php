@@ -330,7 +330,14 @@
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({ amount: total })
+                    body: JSON.stringify({ 
+                        amount: total,
+                        parking_lot_id: bookingData.lot_id,
+                        date: bookingData.start_datetime.split(' ')[0],
+                        start_datetime: bookingData.start_datetime,
+                        end_datetime: bookingData.end_datetime,
+                        slot_ids: slots.map(s => s.id)
+                    })
                 });
 
                 const orderDataResp = await orderResponse.json();
