@@ -34,18 +34,18 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                     <li>
-                        <a class="dropdown-item d-flex align-items-center justify-content-between" href="#" id="toggleBookingsBtn">
-                            <span id="toggleBookingsText">{{ $parkingLot->is_accepting_bookings ? 'Pause Bookings' : 'Resume Bookings' }}</span>
+                        <label class="dropdown-item d-flex align-items-center justify-content-between" style="cursor: pointer;" id="toggleBookingsBtn">
+                            <span id="toggleBookingsText">{{ $parkingLot->is_accepting_bookings ? 'Accepting Bookings' : 'Bookings Paused' }}</span>
                             <div class="form-check form-switch mb-0 ms-3">
                                 <input class="form-check-input" type="checkbox" id="toggleBookingsSwitch" {{ $parkingLot->is_accepting_bookings ? 'checked' : '' }}>
                             </div>
-                        </a>
+                        </label>
                     </li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger fw-bold" href="#" onclick="openClosureModal()"><i class="bi bi-trash me-2"></i> Schedule Closure</a></li>
+                    <li><a class="dropdown-item text-danger fw-bold" href="javascript:void(0)" onclick="openClosureModal()"><i class="bi bi-trash me-2"></i> Schedule Closure</a></li>
                     @if(in_array($parkingLot->status, ['scheduled_for_removal', 'closing_soon']))
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-success fw-bold" href="#" onclick="cancelClosure()"><i class="bi bi-arrow-counterclockwise me-2"></i>Cancel Scheduled Closure</a></li>
+                    <li><a class="dropdown-item text-success fw-bold" href="javascript:void(0)" onclick="cancelClosure()"><i class="bi bi-arrow-counterclockwise me-2"></i>Cancel Scheduled Closure</a></li>
                     @endif
                 </ul>
             </div>
@@ -403,16 +403,15 @@
         document.getElementById('manualBookingForm').reset();
     }
 
-    // Toggle Bookings
-    document.getElementById('toggleBookingsBtn').addEventListener('click', async function(e) {
-        e.preventDefault();
+    // Keep dropdown open when clicking the toggle label
+    document.getElementById('toggleBookingsBtn').addEventListener('click', function(e) {
         e.stopPropagation();
-        
-        const checkbox = document.getElementById('toggleBookingsSwitch');
+    });
+
+    // Toggle Bookings when checkbox actually changes
+    document.getElementById('toggleBookingsSwitch').addEventListener('change', async function(e) {
         const textLabel = document.getElementById('toggleBookingsText');
-        const newState = !checkbox.checked;
-        
-        checkbox.checked = newState;
+        const newState = this.checked;
         
         try {
             const res = await fetch(`/api/owner/parking-lots/${parkingId}/toggle-bookings`, {
@@ -427,20 +426,15 @@
             const data = await res.json();
             
             if (res.ok) {
-                textLabel.innerText = data.is_accepting_bookings ? 'Pause Bookings' : 'Resume Bookings';
+                textLabel.innerText = data.is_accepting_bookings ? 'Accepting Bookings' : 'Bookings Paused';
             } else {
                 alert(data.message || 'Failed to toggle bookings.');
-                checkbox.checked = !newState; // revert
+                this.checked = !newState; // revert
             }
         } catch (err) {
             console.error(err);
-            checkbox.checked = !newState; // revert
+            this.checked = !newState; // revert
         }
-    });
-
-    // Prevent modal close if clicking switch inside dropdown
-    document.getElementById('toggleBookingsSwitch').addEventListener('click', function(e) {
-        e.preventDefault(); // Let the a-tag handle the state via api
     });
 
     // Schedule Closure Flow
@@ -480,7 +474,7 @@
         const text = document.getElementById('closureConfirmText').value.trim();
         const btn = document.getElementById('submitClosureBtn');
 
-        if (checkbox && text === 'CONFIRM REMOVE') {
+        if (checkbox && text.toUpperCase() === 'CONFIRM REMOVE') {
             btn.disabled = false;
         } else {
             btn.disabled = true;
