@@ -206,7 +206,7 @@ class BookingController extends Controller
             ]);
 
             // Automatically generate the PDF invoice/ticket
-            \App\Http\Controllers\InvoiceController::generateInvoice($booking);
+            defer(fn () => \App\Http\Controllers\InvoiceController::generateInvoice($booking));
 
             // Create Transaction Record
             Transaction::create([
@@ -219,7 +219,7 @@ class BookingController extends Controller
                 'payment_method' => $validated['payment_method'],
                 'description' => "Booking for slot {$slot->slot_number} at {$parkingLot->name}",
                 'metadata' => [
-                    'date' => $validated['date'],
+                    'date' => $date,
                     'time_slot' => $start->format('H:i') . '-' . $end->format('H:i')
                 ]
             ]);
